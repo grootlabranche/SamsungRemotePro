@@ -38,7 +38,7 @@ final class SamsungTVService: ObservableObject {
         let results = await discovery.discover()
         connectionState = .disconnected
         lastDiagnostic = results.isEmpty
-            ? "Aucun téléviseur Samsung n’a répondu à la découverte SSDP. Vous pouvez saisir son adresse IP."
+            ? "Aucun téléviseur Samsung n’a été détecté par Bonjour ni par le scan IPv4. Vous pouvez saisir son adresse IP."
             : "\(results.count) téléviseur(s) compatible(s) trouvé(s)."
         return results
     }
@@ -46,9 +46,18 @@ final class SamsungTVService: ObservableObject {
     func validateAndConnect(host: String, secure: Bool = true) async {
         let normalized = host.trimmingCharacters(in: .whitespacesAndNewlines)
         guard isValidHost(normalized) else { connectionState = .failed(.invalidAddress); return }
-        guard let tv = await discovery.probe(host: normalized, useSecureConnection: secure) else {
+        // Respect the selected preference first, but try the other known Samsung
+        // endpoint if the selected port is not exposed by this TV/firmware.
+        let preferred = await discovery.probe(host: normalized, useSecureConnection: secure)
+        let alternate: SamsungTV?
+        if preferred == nil {
+            alternate = await discovery.probe(host: normalized, useSecureConnection: !secure)
+        } else {
+            alternate = nil
+        }
+        guard let tv = preferred ?? alternate else {
             connectionState = .failed(.televisionUnavailable)
-            lastDiagnostic = "Aucun service de télécommande Samsung n’a répondu sur \(normalized):\(secure ? AppConfiguration.defaultSecurePort : AppConfiguration.defaultInsecurePort). Vérifiez l’adresse IP, le même Wi‑Fi et essayez l’autre mode de connexion."
+            lastDiagnostic = "Aucun service Samsung n’a répondu sur \(normalized):8002 ni :8001. Vérifiez que l’iPhone et la TV sont sur le même réseau local, que la TV est allumée et que l’accès au réseau local est autorisé dans iOS."
             return
         }
         store.save(tv)
@@ -182,7 +191,13 @@ final class SamsungTVService: ObservableObject {
     }
 
     private func isValidHost(_ host: String) -> Bool {
-        URL(string: "http://\(host)")?.host != nil
+        let parts = host.split(separator: ".")
+        guard parts.count == 4 else { return false }
+        let octets = parts.compactMap { Int($0) }
+        guard octets.count == 4, octets.allSatisfy({ (0...255).contains($0) }) else { return false }
+        return octets[0] == 10 || (octets[0] == 192 && octets[1] == 168) ||
+            (octets[0] == 172 && (16...31).contains(octets[1])) ||
+            (octets[0] == 169 && octets[1] == 254)
     }
 
     private func updateInstalledApplications(from raw: String) {

@@ -8,7 +8,7 @@ Télécommande iOS native (SwiftUI) pour téléviseurs Samsung compatibles avec 
 - Appairage : attente de l’autorisation affichée sur la TV, récupération du jeton retourné par le téléviseur et conservation du jeton dans le Trousseau iOS.
 - Touches de navigation, accueil, retour, menu, alimentation, volume, sourdine, lecture/pause, retour/avance rapide et chaînes.
 - Pavé tactile à gestes, avec protection contre les déclenchements multiples, ou pavé directionnel accessible.
-- Découverte SSDP et vérification de l’API `/api/v2/`, plus saisie manuelle d’adresse IP.
+- Découverte Bonjour/mDNS, vérification de l’API `/api/v2/` et scan IPv4 de repli, plus saisie manuelle d’adresse IP.
 - Réessais de connexion limités, délai de 12 s, diagnostic lisible et journalisation sans jeton ni mot de passe.
 - Demande de liste d’applications lorsqu’elle est exposée par la TV, et favoris manuels à partir d’un identifiant connu ; aucun identifiant n’est inventé.
 - Saisie de texte par `SendInputString` Base64 (avec début/fin de session), uniquement si l’écran/l’application TV l’accepte.
@@ -37,7 +37,7 @@ Cette édition retire uniquement l’App Group, une capacité Apple réservée a
 
 Avec un compte Apple gratuit, Sideloadly indique une validité de 7 jours et une limite de trois applications. Son démon de rafraîchissement peut réinstaller automatiquement l’app lorsque l’iPhone est à portée du PC. Consultez la [FAQ officielle Sideloadly](https://sideloadly.io/faq) si l’iPhone n’est pas détecté ou si le profil doit être approuvé.
 
-Pour la découverte SSDP, iOS peut nécessiter l’entitlement Apple de multicast, qui n’est pas inclus afin de préserver la signature gratuite. La saisie manuelle de l’adresse IP fonctionne sans cette capacité.
+La découverte Bonjour utilise le navigateur réseau intégré à iOS et déclare les deux types de service dans `NSBonjourServices`. Le scan IPv4 local sert de solution de repli sans entitlement de multicast. La saisie manuelle de l’adresse IP reste disponible.
 
 ## Configuration de la TV
 
@@ -57,7 +57,7 @@ Pour la découverte SSDP, iOS peut nécessiter l’entitlement Apple de multicas
 - La Live Activity est explicitement déclenchée par l’utilisateur, peut être arrêtée par iOS et ne maintient aucune connexion réseau persistante. Le widget/île dynamique ouvrent l’app pour les actions.
 - La saisie de texte dépend du contexte IME fourni par la TV et peut être ignorée par certaines apps.
 - iOS ne donne pas à une app tierce un contrôle universel des contrôles multimédias de l’écran verrouillé d’une TV. Cette app ne détourne pas les API audio pour simuler ce comportement.
-- Le certificat TLS fourni par certaines TV peut être auto-signé. L’app ne contourne jamais la validation TLS d’iOS. Si la validation échoue, le mode non chiffré doit être choisi explicitement et uniquement sur un réseau de confiance.
+- Le certificat TLS fourni par certaines TV peut être auto-signé. Pour tenir compte des certificats auto-signés de certains téléviseurs, le délégué accepte le certificat présenté uniquement lorsqu’il se connecte à une adresse IPv4 privée/link-local. Cela ne prouve pas cryptographiquement l’identité de la TV : ne connectez que votre propre téléviseur sur un réseau de confiance. Si la connexion sécurisée ne répond pas, l’app essaie l’autre port; le port 8001 transmet les échanges sans chiffrement.
 
 ## Tests et compilation
 
@@ -94,9 +94,9 @@ Une vérification de l’appairage et des commandes exige un iPhone physique car
 ## Dépannage réseau
 - Autoriser l'accès au réseau local dans Réglages iOS.
 - L'iPhone et la TV doivent être sur le même réseau, sans réseau invité ni isolation des clients Wi-Fi.
-- Pour une saisie manuelle, essayer d'abord le port 8001, puis activer le port 8002 si nécessaire.
+- Pour une saisie manuelle, laisser la connexion sécurisée recommandée activée ; l’app essaie automatiquement l’autre port si le premier ne répond pas.
 - Accepter la demande d'autorisation qui apparaît sur l'écran de la TV lors de la première connexion.
 
 
 ## Découverte réseau (version expérimentale)
-La recherche combine SSDP et un scan IPv4 local `/24` avec validation de l’API Samsung. L’autorisation iOS Réseau local doit être accordée. Certains routeurs isolent les appareils Wi-Fi ou utilisent des VLAN, ce qui peut empêcher la découverte. Voir `BUILD_REPORT.md`.
+La recherche combine Bonjour/mDNS (`_samsungmsf._tcp` et `_samsungctl._tcp`) avec un scan IPv4 du sous-réseau Wi-Fi calculé à partir du masque de l’interface `en0`, puis valide les candidats via `/api/v2/` sur 8002 et 8001. Les deux ports sont testés en parallèle et le mode sécurisé est privilégié. Sur les sous-réseaux inhabituellement larges, le scan est limité à une fenêtre de 1 025 adresses autour du téléphone. L’autorisation iOS Réseau local doit être accordée. Certains routeurs isolent les appareils Wi-Fi ou utilisent des VLAN, ce qui peut empêcher la découverte. Les commandes JSON sont émises comme trames WebSocket texte. Voir `BUILD_REPORT.md`.

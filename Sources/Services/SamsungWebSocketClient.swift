@@ -49,7 +49,15 @@ final class SamsungWebSocketClient {
     func send(_ data: Data) async throws {
         guard let task else { throw RemoteError.connectionLost }
         do {
-            try await task.send(.data(data))
+            // Samsung's remote-control channel expects JSON as a WebSocket TEXT
+            // frame. Sending the same JSON as a binary frame can connect successfully
+            // while every key is ignored by the TV.
+            guard let json = String(data: data, encoding: .utf8) else {
+                throw RemoteError.protocolError("Le message JSON n’est pas encodé en UTF-8.")
+            }
+            try await task.send(.string(json))
+        } catch let error as RemoteError {
+            throw error
         } catch {
             throw RemoteError.transportError(error.localizedDescription)
         }

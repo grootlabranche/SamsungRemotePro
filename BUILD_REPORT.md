@@ -1,16 +1,20 @@
-# SamsungRemotePro – intégration réseau inspirée de ha-samsungtv-smart
+# SamsungRemotePro – rapport de correction réseau (29 octobre 2026)
 
-## Ce qui a été changé
-- La référence `ollo69/ha-samsungtv-smart` est une intégration Python pour Home Assistant. Elle configure généralement la TV à partir d’une adresse IP, puis utilise les canaux Samsung locaux; ce n’est pas une bibliothèque Swift de découverte automatique.
-- La découverte iOS combine maintenant SSDP et un balayage limité du sous-réseau IPv4 local `/24` sur `en0`, puis valide les candidats via `/api/v2/` sur 8002 et 8001. Les résultats ne sont retenus que si la réponse ressemble à l’API d’un téléviseur Samsung.
-- Les requêtes locales HTTPS et le WebSocket sécurisé acceptent le certificat local non reconnu uniquement pour les adresses IPv4 privées/link-local. Aucun certificat n’est accepté de cette manière pour un hôte public.
-- La recherche est bornée par lots de 24 hôtes et des délais courts.
+## Corrections appliquées au projet fourni
+- Correction de l’erreur Swift signalée par GitHub Actions : suppression du `guard let` appliqué à `compactMap`, qui renvoyait déjà un tableau non optionnel.
+- Découverte réseau : Bonjour/mDNS et scan de repli sont exécutés en parallèle. Le scan utilise l’adresse IPv4 et le masque réel de l’interface Wi-Fi `en0` au lieu de supposer systématiquement un réseau `/24`. Sur un sous-réseau inhabituellement large, le scan est limité à une fenêtre de 1 025 adresses autour du téléphone.
+- Les tests des endpoints HTTPS `8002` et HTTP `8001` sont lancés en parallèle et le résultat sécurisé est privilégié. Les lots de scan sont limités à 32 adresses pour éviter d’ouvrir plusieurs centaines de connexions simultanément.
+- La recherche et la connexion manuelle n’acceptent que des adresses IPv4 privées/locales. Le port choisi dans le formulaire est essayé en premier, puis l’autre endpoint est essayé comme solution de repli.
+- Correction du transport de commandes : le JSON de la télécommande est maintenant envoyé en trame WebSocket **texte** (`.string`) au lieu de trame binaire (`.data`). Les canaux Samsung de référence transmettent le JSON comme message texte.
+- Le délégué TLS de la session de découverte est conservé explicitement, comme celui de la session WebSocket.
+- Les diagnostics réseau expliquent mieux qu’une absence de résultat peut venir du même réseau local, de l’autorisation iOS Réseau local ou du téléviseur qui n’expose pas les ports.
 
-## À savoir
-- Le balayage `/24` suppose un réseau domestique courant. Il ne couvre pas les VLAN séparés, les sous-réseaux plus grands que `/24`, IPv6, ni les réseaux où l’isolation des clients Wi-Fi est activée.
-- iOS peut limiter les recherches multicast selon les droits et le réseau. Le balayage local sert de solution de repli, mais nécessite l’autorisation Réseau local.
-- L’acceptation d’un certificat auto-signé est restreinte aux IP privées parce que certains téléviseurs utilisent un certificat local. Cela réduit le risque mais ne fournit pas une authentification cryptographique forte du téléviseur.
-- L’intégration Home Assistant de référence demande à l’utilisateur l’IP et recommande d’accepter l’autorisation sur l’écran TV. Elle ne prouve pas que la découverte automatique doit fonctionner sur tous les réseaux.
+## Recherche documentaire
+- Samsung publie la documentation de touches Tizen et du SDK Smart View. Le SDK Smart View concerne la découverte et la communication entre apps compatibles TV/mobile ; cela ne constitue pas une documentation publique du canal de télécommande local `samsung.remote.control`. Le navigateur iOS déclare `_samsungmsf._tcp` et `_samsungctl._tcp` dans `NSBonjourServices`; ces services sont des indices de découverte, pas une preuve suffisante de compatibilité, d’où la vérification HTTP qui suit.
+- Le canal WebSocket local `samsung.remote.control`, l’endpoint `/api/v2/` et les ports habituels `8001`/`8002` sont recoupés avec des implémentations open source, notamment `xchwarze/samsung-tv-ws-api` et `ollo69/ha-samsungtv-smart`. L’intégration Home Assistant d’ollo69 est un composant Python, pas une bibliothèque Swift utilisable directement.
+- La validation `/api/v2/` identifie une TV seulement quand l’endpoint renvoie une réponse JSON avec les informations d’appareil attendues. Les commandes sont toujours dépendantes du firmware, des autorisations affichées à l’écran et de l’application active sur la TV.
 
-## Vérifications
-La structure du ZIP a été préservée et les modifications ont été vérifiées textuellement. Xcode/iOS SDK n’étant pas disponible dans cet environnement, aucune compilation iOS réelle ni test sur téléviseur n’a été exécuté. La prochaine exécution GitHub Actions reste le test de compilation nécessaire.
+## Limites restantes / vérification
+- Le scan ne peut pas traverser les VLAN, les réseaux invités isolés ou les sous-réseaux auxquels l’iPhone n’a pas accès. Les politiques iOS/routeur peuvent limiter Bonjour/mDNS ou isoler les clients Wi-Fi.
+- La confiance TLS pour un certificat local non reconnu est restreinte aux IP privées/link-local, mais cela n’authentifie pas cryptographiquement la TV : n’utilisez la connexion qu’avec un appareil de confiance sur votre LAN. Le port 8001 est en clair.
+- Aucun accès à la TV physique ni au SDK iOS/Xcode Apple n’est disponible dans cet environnement. Le texte source et le journal fourni ont été audités, mais une compilation GitHub Actions et un essai réel sur la TV restent indispensables pour confirmer le résultat.
