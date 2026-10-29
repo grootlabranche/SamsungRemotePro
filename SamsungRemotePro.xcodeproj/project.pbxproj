@@ -1,0 +1,171 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		B001 /* AppConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = F001 /* AppConfiguration.swift */; };
+		B002 /* SamsungRemoteProApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = F002 /* SamsungRemoteProApp.swift */; };
+		B003 /* RemoteCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = F003 /* RemoteCommand.swift */; };
+		B004 /* RemoteApplication.swift in Sources */ = {isa = PBXBuildFile; fileRef = F004 /* RemoteApplication.swift */; };
+		B005 /* SamsungTV.swift in Sources */ = {isa = PBXBuildFile; fileRef = F005 /* SamsungTV.swift */; };
+		B006 /* ConnectionState.swift in Sources */ = {isa = PBXBuildFile; fileRef = F006 /* ConnectionState.swift */; };
+		B007 /* RemoteError.swift in Sources */ = {isa = PBXBuildFile; fileRef = F007 /* RemoteError.swift */; };
+		B008 /* RemoteActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = F008 /* RemoteActivityAttributes.swift */; };
+		B009 /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = F009 /* AppSettings.swift */; };
+		B010 /* SamsungCommandMapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = F010 /* SamsungCommandMapper.swift */; };
+		B011 /* SamsungWebSocketClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = F011 /* SamsungWebSocketClient.swift */; };
+		B012 /* SamsungDiscoveryService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F012 /* SamsungDiscoveryService.swift */; };
+		B013 /* SamsungTVService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F013 /* SamsungTVService.swift */; };
+		B014 /* NetworkMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = F014 /* NetworkMonitor.swift */; };
+		B015 /* LiveActivityManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F015 /* LiveActivityManager.swift */; };
+		B016 /* KeychainStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F016 /* KeychainStore.swift */; };
+		B017 /* TVStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F017 /* TVStore.swift */; };
+		B018 /* Logger.swift in Sources */ = {isa = PBXBuildFile; fileRef = F018 /* Logger.swift */; };
+		B019 /* Haptics.swift in Sources */ = {isa = PBXBuildFile; fileRef = F019 /* Haptics.swift */; };
+		B020 /* RemoteViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F020 /* RemoteViewModel.swift */; };
+		B021 /* AppRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F021 /* AppRootView.swift */; };
+		B022 /* ConnectionViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = F022 /* ConnectionViews.swift */; };
+		B023 /* RemoteControlView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F023 /* RemoteControlView.swift */; };
+		B024 /* TouchPad.swift in Sources */ = {isa = PBXBuildFile; fileRef = F024 /* TouchPad.swift */; };
+		B025 /* SecondaryViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = F025 /* SecondaryViews.swift */; };
+		B026 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = F026 /* Assets.xcassets */; };
+		B027 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = F027 /* Localizable.xcstrings */; };
+		B028 /* RemoteWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = F028 /* RemoteWidget.swift */; };
+		B029 /* RemoteLiveActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = F029 /* RemoteLiveActivity.swift */; };
+		B030 /* SamsungRemoteProWidgets.swift in Sources */ = {isa = PBXBuildFile; fileRef = F030 /* SamsungRemoteProWidgets.swift */; };
+		B031 /* OpenRemoteIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = F031 /* OpenRemoteIntent.swift */; };
+		B032 /* AppConfiguration.swift in Widget Sources */ = {isa = PBXBuildFile; fileRef = F001 /* AppConfiguration.swift */; };
+		B033 /* SamsungTV.swift in Widget Sources */ = {isa = PBXBuildFile; fileRef = F005 /* SamsungTV.swift */; };
+		B034 /* RemoteActivityAttributes.swift in Widget Sources */ = {isa = PBXBuildFile; fileRef = F008 /* RemoteActivityAttributes.swift */; };
+		B035 /* SamsungCommandMapperTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F032 /* SamsungCommandMapperTests.swift */; };
+		B036 /* ModelsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F033 /* ModelsTests.swift */; };
+		B037 /* SamsungProtocolIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F034 /* SamsungProtocolIntegrationTests.swift */; };
+		B038 /* SamsungRemoteProWidgets.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = F036 /* SamsungRemoteProWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		P001 = {isa = PBXContainerItemProxy; containerPortal = PRJ1 /* Project object */; proxyType = 1; remoteGlobalIDString = T002; remoteInfo = SamsungRemoteProWidgets; };
+		P002 = {isa = PBXContainerItemProxy; containerPortal = PRJ1 /* Project object */; proxyType = 1; remoteGlobalIDString = T001; remoteInfo = SamsungRemotePro; };
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		F001 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConfiguration.swift; sourceTree = "<group>"; };
+		F002 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SamsungRemoteProApp.swift; sourceTree = "<group>"; };
+		F003 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteCommand.swift; sourceTree = "<group>"; };
+		F004 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteApplication.swift; sourceTree = "<group>"; };
+		F005 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SamsungTV.swift; sourceTree = "<group>"; };
+		F006 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionState.swift; sourceTree = "<group>"; };
+		F007 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteError.swift; sourceTree = "<group>"; };
+		F008 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteActivityAttributes.swift; sourceTree = "<group>"; };
+		F009 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettings.swift; sourceTree = "<group>"; };
+		F010 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SamsungCommandMapper.swift; sourceTree = "<group>"; };
+		F011 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SamsungWebSocketClient.swift; sourceTree = "<group>"; };
+		F012 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SamsungDiscoveryService.swift; sourceTree = "<group>"; };
+		F013 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SamsungTVService.swift; sourceTree = "<group>"; };
+		F014 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkMonitor.swift; sourceTree = "<group>"; };
+		F015 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveActivityManager.swift; sourceTree = "<group>"; };
+		F016 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainStore.swift; sourceTree = "<group>"; };
+		F017 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TVStore.swift; sourceTree = "<group>"; };
+		F018 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Logger.swift; sourceTree = "<group>"; };
+		F019 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Haptics.swift; sourceTree = "<group>"; };
+		F020 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteViewModel.swift; sourceTree = "<group>"; };
+		F021 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppRootView.swift; sourceTree = "<group>"; };
+		F022 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionViews.swift; sourceTree = "<group>"; };
+		F023 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteControlView.swift; sourceTree = "<group>"; };
+		F024 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TouchPad.swift; sourceTree = "<group>"; };
+		F025 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecondaryViews.swift; sourceTree = "<group>"; };
+		F026 = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		F027 = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
+		F028 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteWidget.swift; sourceTree = "<group>"; };
+		F029 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteLiveActivity.swift; sourceTree = "<group>"; };
+		F030 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SamsungRemoteProWidgets.swift; sourceTree = "<group>"; };
+		F031 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenRemoteIntent.swift; sourceTree = "<group>"; };
+		F032 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SamsungCommandMapperTests.swift; sourceTree = "<group>"; };
+		F033 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelsTests.swift; sourceTree = "<group>"; };
+		F034 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SamsungProtocolIntegrationTests.swift; sourceTree = "<group>"; };
+		F035 = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SamsungRemotePro.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		F036 = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = SamsungRemoteProWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		F037 = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SamsungRemoteProTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		PHF1 = {isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+		PHF2 = {isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+		PHF3 = {isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		G001 = {isa = PBXGroup; children = (G002, G003, G004, G005, G006, G007, G008, G009, G010, G011, ); sourceTree = "<group>"; };
+		G002 = {isa = PBXGroup; path = Config; sourceTree = "<group>"; children = (F001, ); };
+		G003 = {isa = PBXGroup; path = Sources; sourceTree = "<group>"; children = (G012, G013, G014, G015, G016, G017, G018, ); };
+		G004 = {isa = PBXGroup; path = Widgets; sourceTree = "<group>"; children = (F028, F029, F030, ); };
+		G005 = {isa = PBXGroup; path = AppIntents; sourceTree = "<group>"; children = (F031, ); };
+		G006 = {isa = PBXGroup; path = Resources; sourceTree = "<group>"; children = (F026, F027, ); };
+		G007 = {isa = PBXGroup; path = Tests; sourceTree = "<group>"; children = (G019, G020, ); };
+		G008 = {isa = PBXGroup; path = Scripts; sourceTree = "<group>"; children = (); };
+		G009 = {isa = PBXGroup; name = Products; sourceTree = "<group>"; children = (F035, F036, F037, ); };
+		G010 = {isa = PBXGroup; name = Documentation; sourceTree = "<group>"; children = (); };
+		G011 = {isa = PBXGroup; name = Frameworks; sourceTree = "<group>"; children = (); };
+		G012 = {isa = PBXGroup; path = App; sourceTree = "<group>"; children = (F002, ); };
+		G013 = {isa = PBXGroup; path = Models; sourceTree = "<group>"; children = (F003, F004, F005, F006, F007, F008, F009, ); };
+		G014 = {isa = PBXGroup; path = Services; sourceTree = "<group>"; children = (F010, F011, F012, F013, F014, F015, ); };
+		G015 = {isa = PBXGroup; path = Storage; sourceTree = "<group>"; children = (F016, F017, ); };
+		G016 = {isa = PBXGroup; path = Utilities; sourceTree = "<group>"; children = (F018, F019, ); };
+		G017 = {isa = PBXGroup; path = ViewModels; sourceTree = "<group>"; children = (F020, ); };
+		G018 = {isa = PBXGroup; path = Views; sourceTree = "<group>"; children = (F021, F022, F023, F024, F025, ); };
+		G019 = {isa = PBXGroup; path = UnitTests; sourceTree = "<group>"; children = (F032, F033, ); };
+		G020 = {isa = PBXGroup; path = IntegrationTests; sourceTree = "<group>"; children = (F034, ); };
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		T001 = {isa = PBXNativeTarget; buildConfigurationList = CL01; buildPhases = (PHS1, PHR1, PHF1, PHE1, ); buildRules = (); dependencies = (TD01, ); name = SamsungRemotePro; productName = SamsungRemotePro; productReference = F035; productType = "com.apple.product-type.application"; };
+		T002 = {isa = PBXNativeTarget; buildConfigurationList = CL02; buildPhases = (PHS2, PHF2, ); buildRules = (); dependencies = (); name = SamsungRemoteProWidgets; productName = SamsungRemoteProWidgets; productReference = F036; productType = "com.apple.product-type.app-extension"; };
+		T003 = {isa = PBXNativeTarget; buildConfigurationList = CL03; buildPhases = (PHS3, PHF3, ); buildRules = (); dependencies = (TD02, ); name = SamsungRemoteProTests; productName = SamsungRemoteProTests; productReference = F037; productType = "com.apple.product-type.bundle.unit-test"; };
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		PRJ1 = {isa = PBXProject; attributes = {BuildIndependentTargetsInParallel = 1; LastSwiftUpdateCheck = 1600; LastUpgradeCheck = 1600; TargetAttributes = {T002 = {CreatedOnToolsVersion = 16.0; }; }; }; buildConfigurationList = CL00; compatibilityVersion = "Xcode 14.0"; developmentRegion = fr; hasScannedForEncodings = 0; knownRegions = (fr, Base, ); mainGroup = G001; productRefGroup = G009; projectDirPath = ""; projectRoot = ""; targets = (T001, T002, T003, ); };
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		PHR1 = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (B026, B027, ); runOnlyForDeploymentPostprocessing = 0; };
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		PHS1 = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (B001, B002, B003, B004, B005, B006, B007, B008, B009, B010, B011, B012, B013, B014, B015, B016, B017, B018, B019, B020, B021, B022, B023, B024, B025, ); runOnlyForDeploymentPostprocessing = 0; };
+		PHS2 = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (B028, B029, B030, B031, B034, ); runOnlyForDeploymentPostprocessing = 0; };
+		PHS3 = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (B035, B036, B037, ); runOnlyForDeploymentPostprocessing = 0; };
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		PHE1 = {isa = PBXCopyFilesBuildPhase; buildActionMask = 2147483647; dstPath = ""; dstSubfolderSpec = 13; files = (B038, ); name = "Embed App Extensions"; runOnlyForDeploymentPostprocessing = 0; };
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		TD01 = {isa = PBXTargetDependency; target = T002; targetProxy = P001; };
+		TD02 = {isa = PBXTargetDependency; target = T001; targetProxy = P002; };
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		C001 = {isa = XCBuildConfiguration; buildSettings = {ALWAYS_SEARCH_USER_PATHS = NO; CLANG_CXX_LANGUAGE_STANDARD = "gnu++20"; CLANG_ENABLE_MODULES = YES; CLANG_ENABLE_OBJC_ARC = YES; CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES; COPY_PHASE_STRIP = NO; DEBUG_INFORMATION_FORMAT = dwarf; ENABLE_TESTABILITY = YES; GCC_C_LANGUAGE_STANDARD = gnu17; GCC_NO_COMMON_BLOCKS = YES; GCC_WARN_64_TO_32_BIT_CONVERSION = YES; GCC_WARN_UNDECLARED_SELECTOR = YES; GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE; GCC_WARN_UNUSED_FUNCTION = YES; GCC_WARN_UNUSED_VARIABLE = YES; IPHONEOS_DEPLOYMENT_TARGET = 18.0; MTL_FAST_MATH = YES; SDKROOT = iphoneos; SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG; SWIFT_OPTIMIZATION_LEVEL = "-Onone"; SWIFT_VERSION = 5.0; }; name = Debug; };
+		C002 = {isa = XCBuildConfiguration; buildSettings = {ALWAYS_SEARCH_USER_PATHS = NO; CLANG_CXX_LANGUAGE_STANDARD = "gnu++20"; CLANG_ENABLE_MODULES = YES; CLANG_ENABLE_OBJC_ARC = YES; COPY_PHASE_STRIP = NO; DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym"; ENABLE_NS_ASSERTIONS = NO; GCC_C_LANGUAGE_STANDARD = gnu17; IPHONEOS_DEPLOYMENT_TARGET = 18.0; SDKROOT = iphoneos; SWIFT_COMPILATION_MODE = wholemodule; SWIFT_OPTIMIZATION_LEVEL = "-O"; SWIFT_VERSION = 5.0; VALIDATE_PRODUCT = YES; }; name = Release; };
+		C003 = {isa = XCBuildConfiguration; buildSettings = {CODE_SIGN_STYLE = Automatic; CURRENT_PROJECT_VERSION = 1; GENERATE_INFOPLIST_FILE = NO; INFOPLIST_FILE = Config/Info.plist; IPHONEOS_DEPLOYMENT_TARGET = 18.0; LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks"; MARKETING_VERSION = 1.0.0; PRODUCT_BUNDLE_IDENTIFIER = fr.samsungremotepro.app; PRODUCT_NAME = "$(TARGET_NAME)"; SWIFT_EMIT_LOC_STRINGS = YES; TARGETED_DEVICE_FAMILY = 1; }; name = Debug; };
+		C004 = {isa = XCBuildConfiguration; buildSettings = {CODE_SIGN_STYLE = Automatic; CURRENT_PROJECT_VERSION = 1; GENERATE_INFOPLIST_FILE = NO; INFOPLIST_FILE = Config/Info.plist; IPHONEOS_DEPLOYMENT_TARGET = 18.0; LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks"; MARKETING_VERSION = 1.0.0; PRODUCT_BUNDLE_IDENTIFIER = fr.samsungremotepro.app; PRODUCT_NAME = "$(TARGET_NAME)"; SWIFT_EMIT_LOC_STRINGS = YES; TARGETED_DEVICE_FAMILY = 1; }; name = Release; };
+		C005 = {isa = XCBuildConfiguration; buildSettings = {APPLICATION_EXTENSION_API_ONLY = YES; CODE_SIGN_STYLE = Automatic; CURRENT_PROJECT_VERSION = 1; GENERATE_INFOPLIST_FILE = NO; INFOPLIST_FILE = Config/WidgetInfo.plist; IPHONEOS_DEPLOYMENT_TARGET = 18.0; LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @executable_path/../../Frameworks"; MARKETING_VERSION = 1.0.0; PRODUCT_BUNDLE_IDENTIFIER = fr.samsungremotepro.app.widgets; PRODUCT_NAME = "$(TARGET_NAME)"; SKIP_INSTALL = YES; SWIFT_EMIT_LOC_STRINGS = YES; TARGETED_DEVICE_FAMILY = 1; }; name = Debug; };
+		C006 = {isa = XCBuildConfiguration; buildSettings = {APPLICATION_EXTENSION_API_ONLY = YES; CODE_SIGN_STYLE = Automatic; CURRENT_PROJECT_VERSION = 1; GENERATE_INFOPLIST_FILE = NO; INFOPLIST_FILE = Config/WidgetInfo.plist; IPHONEOS_DEPLOYMENT_TARGET = 18.0; LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @executable_path/../../Frameworks"; MARKETING_VERSION = 1.0.0; PRODUCT_BUNDLE_IDENTIFIER = fr.samsungremotepro.app.widgets; PRODUCT_NAME = "$(TARGET_NAME)"; SKIP_INSTALL = YES; SWIFT_EMIT_LOC_STRINGS = YES; TARGETED_DEVICE_FAMILY = 1; }; name = Release; };
+		C007 = {isa = XCBuildConfiguration; buildSettings = {BUNDLE_LOADER = "$(TEST_HOST)"; CODE_SIGN_STYLE = Automatic; GENERATE_INFOPLIST_FILE = YES; IPHONEOS_DEPLOYMENT_TARGET = 18.0; PRODUCT_BUNDLE_IDENTIFIER = fr.samsungremotepro.app.tests; SWIFT_VERSION = 5.0; TARGETED_DEVICE_FAMILY = 1; TEST_HOST = "$(BUILT_PRODUCTS_DIR)/SamsungRemotePro.app/SamsungRemotePro"; }; name = Debug; };
+		C008 = {isa = XCBuildConfiguration; buildSettings = {BUNDLE_LOADER = "$(TEST_HOST)"; CODE_SIGN_STYLE = Automatic; GENERATE_INFOPLIST_FILE = YES; IPHONEOS_DEPLOYMENT_TARGET = 18.0; PRODUCT_BUNDLE_IDENTIFIER = fr.samsungremotepro.app.tests; SWIFT_VERSION = 5.0; TARGETED_DEVICE_FAMILY = 1; TEST_HOST = "$(BUILT_PRODUCTS_DIR)/SamsungRemotePro.app/SamsungRemotePro"; }; name = Release; };
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		CL00 = {isa = XCConfigurationList; buildConfigurations = (C001, C002, ); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+		CL01 = {isa = XCConfigurationList; buildConfigurations = (C003, C004, ); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+		CL02 = {isa = XCConfigurationList; buildConfigurations = (C005, C006, ); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+		CL03 = {isa = XCConfigurationList; buildConfigurations = (C007, C008, ); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+/* End XCConfigurationList section */
+	};
+	rootObject = PRJ1 /* Project object */;
+}
