@@ -34,7 +34,7 @@ struct ApplicationsView: View {
                 Section("Détectées par le téléviseur") {
                     ForEach(service.detectedApplications) { app in
                         HStack(spacing: 12) {
-                            AppIconView(data: store.logoData(for: app.id), size: 38)
+                            AppIconView(data: store.logoData(for: app.id, appName: app.name), size: 38)
                             VStack(alignment: .leading, spacing: 3) {
                                 Text(app.name)
                                 Text(app.id).font(.caption2).foregroundStyle(.secondary).lineLimit(1)
@@ -77,7 +77,7 @@ struct ApplicationsView: View {
                                 dismiss()
                             } label: {
                                 HStack(spacing: 12) {
-                                    AppIconView(data: store.logoData(for: app.id), size: 42)
+                                    AppIconView(data: store.logoData(for: app.id, appName: app.name), size: 42)
                                     VStack(alignment: .leading, spacing: 3) {
                                         Text(app.name).foregroundStyle(.primary)
                                         Text(app.id).font(.caption2).foregroundStyle(.secondary).lineLimit(1)
@@ -158,7 +158,7 @@ struct ApplicationsView: View {
         }
         var favorite = app
         favorite.isFavorite = true
-        favorite.customIconData = store.logoData(for: app.id)
+        favorite.customIconData = store.customIconData(for: app.id)
         store.favoriteApps.append(favorite)
     }
 
@@ -269,11 +269,11 @@ struct AppLogoCustomizationView: View {
                 Section("Applications du téléviseur") {
                     ForEach(apps) { app in
                         HStack(spacing: 12) {
-                            AppIconView(data: store.logoData(for: app.id), size: 48)
+                            AppIconView(data: store.logoData(for: app.id, appName: app.name), size: 48)
                             VStack(alignment: .leading, spacing: 3) {
                                 Text(app.name)
                                 Text(app.id).font(.caption2).foregroundStyle(.secondary).lineLimit(1)
-                                if store.logoData(for: app.id) != nil {
+                                if store.customIconData(for: app.id) != nil {
                                     Text("Logo personnalisé enregistré").font(.caption2).foregroundStyle(.green)
                                 }
                             }
@@ -285,7 +285,7 @@ struct AppLogoCustomizationView: View {
                                     .contentShape(Rectangle())
                             }
                             .accessibilityLabel("Choisir et recadrer le logo de \(app.name)")
-                            if store.logoData(for: app.id) != nil {
+                            if store.customIconData(for: app.id) != nil {
                                 Button(role: .destructive) {
                                     store.setCustomIcon(nil, for: app.id)
                                 } label: {
@@ -510,9 +510,9 @@ struct SettingsView: View {
                 Text("La couleur s’applique aux boutons ronds, au rocker de volume et aux raccourcis de la Live Activity. Elle est synchronisée dans l’état de la Dynamic Island.")
                     .font(.footnote).foregroundStyle(.secondary)
             }
-            Section("Dynamic Island") {
-                Toggle("Activer la Live Activity", isOn: $store.preferences.liveActivityEnabled)
-                Text("Désactivée par défaut. Lorsqu’elle est activée, la Live Activity apparaît à l’ouverture de l’application et reste disponible en arrière-plan. Si vous la supprimez manuellement, elle est recréée au prochain retour dans l’application. La désactivation termine l’activité sans désactiver la télécommande.")
+            Section("Dynamic Island / Live Activity") {
+                Toggle("Dynamic Island / Live Activity", isOn: $store.preferences.liveActivityEnabled)
+                Text("Désactivée par défaut. Lorsqu’elle est activée, la Live Activity apparaît à l’ouverture de l’application, reste disponible en arrière-plan et peut afficher jusqu’à cinq applications épinglées. Si vous la supprimez manuellement, elle est recréée au prochain retour dans l’application. La désactivation termine l’activité sans désactiver la télécommande.")
                     .font(.footnote).foregroundStyle(.secondary)
                 Picker("Action rapide", selection: $store.preferences.dynamicIslandAction) {
                     ForEach(LiveActivityQuickAction.allCases) { action in
@@ -535,7 +535,7 @@ struct SettingsView: View {
                 }
             }
             Section("À propos") {
-                LabeledContent("Version", value: "1.2.4")
+                LabeledContent("Version", value: "1.2.5")
                 Text("Les boutons d’action des Live Activities exécutent une LiveActivityIntent dans le processus de l’app sans afficher son interface. Toucher le fond de l’activité ouvre toujours la télécommande.")
                     .font(.footnote).foregroundStyle(.secondary)
             }

@@ -249,8 +249,7 @@ final class SamsungTVService: ObservableObject {
     }
 
     private func fetchTVProvidedIcons(for apps: [RemoteApplication], television: SamsungTV) async {
-        for app in apps where store.logoData(for: app.id) == nil {
-            var didFetchTVIcon = false
+        for app in apps where !store.hasCustomLogo(for: app.id) {
             if let rawIconURL = app.iconURL, !rawIconURL.isEmpty {
                 let baseURL = URL(string: "http://\(television.host):8001/")
                 if let url = URL(string: rawIconURL, relativeTo: baseURL)?.absoluteURL,
@@ -263,8 +262,7 @@ final class SamsungTVService: ObservableObject {
                            (200..<300).contains(http.statusCode),
                            let image = UIImage(data: data),
                            let iconData = makeTVIconData(from: image) {
-                            store.setCustomIcon(iconData, for: app.id)
-                            didFetchTVIcon = true
+                            store.setTVIcon(iconData, for: app.id)
                         }
                     } catch {
                         AppLog.network.debug("Logo TV indisponible pour \(app.name, privacy: .public)")
@@ -272,10 +270,8 @@ final class SamsungTVService: ObservableObject {
                 }
             }
 
-            // Some Samsung firmware omits icon URLs; use an offline fallback for common apps.
-            if !didFetchTVIcon, let fallback = AppLogoCatalog.iconData(forAppName: app.name) {
-                store.setCustomIcon(fallback, for: app.id)
-            }
+            // Offline fallback artwork is displayed by the UI but is not persisted as a
+            // custom/TV logo, so a later refresh can still fetch the real TV artwork.
         }
     }
 

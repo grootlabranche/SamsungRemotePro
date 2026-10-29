@@ -68,3 +68,15 @@
 - Le projet Xcode `.pbxproj` et les fichiers plist passent `plutil -lint`. Le contenu de l’archive ZIP est aussi contrôlé par `unzip -t`.
 - Limite d’environnement : ce conteneur ne possède pas `xcodebuild` ni le SDK iOS. La compilation Apple réelle et les tests ActivityKit sur iPhone devront être confirmés par GitHub Actions puis sur appareil.
 - Limite iOS inchangée : iOS ne garantit pas un callback lorsque l’utilisateur force la fermeture de l’app. La Live Activity peut rester visible jusqu’à ce qu’iOS ou l’utilisateur la retire ; l’app ne la recrée pas spontanément pendant qu’elle reste fermée. À la prochaine ouverture, si l’option est activée, l’app réutilise l’activité existante ou en crée une seule si elle a été supprimée.
+
+
+## Modifications de l’édition 1.2.5 — correctifs du lanceur
+
+- Réduction et contrôle du poids du `ContentState` ActivityKit pour éviter que plusieurs logos épinglés fassent dépasser le budget de payload.
+- Conservation des cinq boutons de lancement même si certaines images doivent être omises pour rester sous la limite de sécurité.
+- Séparation des logos choisis par l’utilisateur, des logos fournis par le téléviseur et des images de secours.
+- Rafraîchissement des logos TV sans écraser les logos personnalisés.
+- Ajout du logo de secours Apple Music.
+- Réglage renommé « Dynamic Island / Live Activity ». Version 1.2.5 (build 7).
+
+Les fichiers Swift ont passé l’analyse syntaxique et les plist ont été validés. Une compilation Xcode complète et des essais sur iPhone restent nécessaires.

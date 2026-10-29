@@ -16,6 +16,7 @@ enum AppLogoCatalog {
         .init(id: "plex", title: "Plex"),
         .init(id: "spotify", title: "Spotify"),
         .init(id: "apple-tv", title: "Apple TV"),
+        .init(id: "apple-music", title: "Apple Music"),
         .init(id: "max", title: "Max"),
         .init(id: "twitch", title: "Twitch")
     ]
@@ -29,6 +30,7 @@ enum AppLogoCatalog {
         if name.contains("disney") { return "disney-plus" }
         if name.contains("plex") { return "plex" }
         if name.contains("spotify") { return "spotify" }
+        if name.contains("apple music") || name == "music" { return "apple-music" }
         if name.contains("apple tv") || name == "tv" { return "apple-tv" }
         if name == "max" || name.contains("hbo max") { return "max" }
         if name.contains("twitch") { return "twitch" }
@@ -54,6 +56,7 @@ enum AppLogoCatalog {
             let background: UIColor
             switch choiceID {
             case "netflix", "plex", "apple-tv": background = .black
+            case "apple-music": background = UIColor(red: 0.96, green: 0.20, blue: 0.39, alpha: 1)
             case "youtube": background = .white
             case "prime-video", "disney-plus", "max": background = UIColor(red: 0.035, green: 0.065, blue: 0.16, alpha: 1)
             case "spotify": background = UIColor(red: 0.12, green: 0.82, blue: 0.42, alpha: 1)
@@ -86,6 +89,9 @@ enum AppLogoCatalog {
                 draw("≋", in: CGRect(x: 34, y: 28, width: 188, height: 192), color: UIColor(red: 0.12, green: 0.82, blue: 0.42, alpha: 1), size: 140, weight: .bold, alignment: .center)
             case "apple-tv":
                 draw("tv+", in: CGRect(x: 10, y: 74, width: 236, height: 108), color: .white, size: 88, weight: .bold, alignment: .center)
+            case "apple-music":
+                // Offline Apple Music-style glyph; generated locally so it is always available.
+                draw("♫", in: CGRect(x: 22, y: 12, width: 212, height: 232), color: .white, size: 190, weight: .bold, alignment: .center)
             case "max":
                 draw("max", in: CGRect(x: 5, y: 65, width: 246, height: 126), color: .white, size: 100, weight: .black, alignment: .center)
             case "twitch":

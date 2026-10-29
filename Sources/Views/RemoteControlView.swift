@@ -15,7 +15,7 @@ struct RemoteControlView: View {
     private var television: SamsungTV? { store.selectedTelevision }
     private var liveActivityApps: [LiveActivityApp] {
         store.favoriteApps.prefix(5).map {
-            LiveActivityApp(id: $0.id, name: $0.name, deepLink: $0.deepLink, customIconData: compactLiveActivityIcon(store.logoData(for: $0.id)))
+            LiveActivityApp(id: $0.id, name: String($0.name.prefix(48)), deepLink: nil, customIconData: compactLiveActivityIcon(store.logoData(for: $0.id, appName: $0.name)))
         }
     }
 
@@ -88,6 +88,7 @@ struct RemoteControlView: View {
         .onChange(of: store.preferences.shortcutButtonColorHex) { _, _ in refreshLiveActivityIfPresent() }
         .onChange(of: store.favoriteApps) { _, _ in refreshLiveActivityIfPresent() }
         .onChange(of: store.customAppIcons) { _, _ in refreshLiveActivityIfPresent() }
+        .onChange(of: store.tvAppIcons) { _, _ in refreshLiveActivityIfPresent() }
     }
 
     private var header: some View {
@@ -220,15 +221,22 @@ struct RemoteControlView: View {
         )
     }
 
-    /// ActivityKit state should stay small; 96 px is enough for the 27–32 pt launcher tiles.
+    /// ActivityKit limits the serialized ContentState to roughly 4 KB. These icons
+    /// are transport thumbnails, not the originals saved in the app's icon library.
+    /// A 32 px JPEG keeps five launchers inside the payload budget far more reliably
+    /// than embedding five 96 px PNGs. LiveActivityManager performs a final size check.
     private func compactLiveActivityIcon(_ data: Data?) -> Data? {
-        guard let data, let image = UIImage(data: data) else { return data }
-        let size = CGSize(width: 96, height: 96)
+        guard let data, let image = UIImage(data: data) else { return nil }
+        let size = CGSize(width: 28, height: 28)
         let format = UIGraphicsImageRendererFormat()
         format.scale = 1
-        format.opaque = false
+        format.opaque = true
         let renderer = UIGraphicsImageRenderer(size: size, format: format)
-        return renderer.image { _ in image.draw(in: CGRect(origin: .zero, size: size)) }.pngData() ?? data
+        return renderer.image { context in
+            UIColor.black.setFill()
+            context.fill(CGRect(origin: .zero, size: size))
+            image.draw(in: CGRect(origin: .zero, size: size))
+        }.jpegData(compressionQuality: 0.20)
     }
 
     private func updateHardwareVolumeBridge() {

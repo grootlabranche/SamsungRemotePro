@@ -155,17 +155,31 @@ final class LiveActivityManager: ObservableObject {
         buttonTintHex: String,
         isPlaying: Bool
     ) -> ActivityContent<RemoteActivityAttributes.ContentState> {
-        ActivityContent(
-            state: RemoteActivityAttributes.ContentState(
-                connectionLabel: state.title,
-                televisionName: television.name,
-                quickAction: quickAction,
-                launcherApps: Array(launcherApps.prefix(5)),
-                isPlaying: isPlaying,
-                buttonTintHex: buttonTintHex
-            ),
-            staleDate: nil
+        var safeApps = Array(launcherApps.prefix(5))
+        var contentState = RemoteActivityAttributes.ContentState(
+            connectionLabel: String(state.title.prefix(32)),
+            televisionName: String(television.name.prefix(64)),
+            quickAction: quickAction,
+            launcherApps: safeApps,
+            isPlaying: isPlaying,
+            buttonTintHex: String(buttonTintHex.prefix(8))
         )
+
+        // ActivityKit rejects oversized ContentState payloads. Preserve every pinned
+        // app and its identifier, but drop image bytes only if the encoded state is
+        // still over a conservative 3.5 KB budget. This avoids a failed update that
+        // can make the whole Live Activity appear broken after pinning several apps.
+        let encoder = JSONEncoder()
+        while ((try? encoder.encode(contentState).count) ?? Int.max) > 3500,
+              let index = safeApps.indices.reversed().first(where: { safeApps[$0].customIconData != nil }) {
+            safeApps[index].customIconData = nil
+            contentState.launcherApps = safeApps
+        }
+        let finalSize = (try? encoder.encode(contentState).count) ?? -1
+        if finalSize > 3500 {
+            AppLog.network.error("État Live Activity trop volumineux après compactage : \(finalSize, privacy: .public) octets")
+        }
+        return ActivityContent(state: contentState, staleDate: nil)
     }
 }
 
