@@ -11,28 +11,36 @@ struct RemoteControlView: View {
     @StateObject private var liveActivity = LiveActivityManager()
 
     private var television: SamsungTV? { store.selectedTelevision }
+    private let mediaColumns = [GridItem(.adaptive(minimum: 66, maximum: 92), spacing: 12)]
 
     var body: some View {
         NavigationStack {
-            VStack(spacing: 18) {
-                header
-                Spacer(minLength: 0)
-                if store.preferences.navigationMode == .gestures {
-                    TouchPad { send($0) }
-                        .frame(maxWidth: 340, maxHeight: 340)
-                        .aspectRatio(1, contentMode: .fit)
-                } else {
-                    DirectionPad { send($0) }
-                        .frame(width: 270, height: 270)
+            GeometryReader { geometry in
+                ScrollView(.vertical) {
+                    VStack(spacing: 18) {
+                        header
+                        if store.preferences.navigationMode == .gestures {
+                            TouchPad { send($0) }
+                                .frame(width: min(geometry.size.width - 36, 340), height: min(geometry.size.width - 36, 340))
+                                .frame(maxWidth: .infinity)
+                        } else {
+                            DirectionPad { send($0) }
+                                .frame(width: min(geometry.size.width - 36, 280), height: min(geometry.size.width - 36, 280))
+                                .frame(maxWidth: .infinity)
+                        }
+                        remoteControls
+                        if store.preferences.showExtraCommands { mediaControls }
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.top, 8)
+                    .padding(.bottom, 22)
+                    .frame(maxWidth: .infinity)
                 }
-                remoteControls
-                if store.preferences.showExtraCommands { mediaControls }
-                Spacer(minLength: 0)
+                .background(Color.black.ignoresSafeArea())
+                .scrollIndicators(.hidden)
             }
-            .padding(.horizontal, 20)
-            .padding(.bottom, 16)
             .background(Color.black.ignoresSafeArea())
-            .navigationBarHidden(true)
+            .toolbar(.hidden, for: .navigationBar)
             .sheet(isPresented: $showingApps) { NavigationStack { ApplicationsView() } }
             .sheet(isPresented: $showingKeyboard) { TextInputView() }
             .sheet(isPresented: $showingSettings) { NavigationStack { SettingsView() } }
@@ -40,46 +48,64 @@ struct RemoteControlView: View {
         }
         .task(id: service.connectionState.title) {
             guard let television else { return }
-            // The activity is a convenience surface, not a persistent network session.
             await liveActivity.update(for: television, state: service.connectionState)
         }
     }
 
     private var header: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: 10) {
             Button { showingPicker = true } label: {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(television?.name ?? "Téléviseur").font(.headline).lineLimit(1)
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(displayName).font(.headline).lineLimit(1).minimumScaleFactor(0.75)
                     ConnectionBadge(state: service.connectionState)
                 }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .contentShape(Rectangle())
             }
+            .buttonStyle(.plain)
             .accessibilityLabel("Choisir un téléviseur")
-            Spacer()
-            Button { showingDiagnostics = true } label: { Image(systemName: "antenna.radiowaves.left.and.right") }
-            Button {
+            headerButton("antenna.radiowaves.left.and.right", label: "Diagnostic réseau") { showingDiagnostics = true }
+            headerButton("rectangle.inset.filled.and.person.filled", label: "Activité en direct") {
                 if let television { liveActivity.start(for: television, state: service.connectionState) }
-            } label: { Image(systemName: "rectangle.inset.filled.and.person.filled") }
-                .accessibilityLabel("Afficher l’activité en direct")
-            Button { showingSettings = true } label: { Image(systemName: "gearshape") }
-            Button { send(.power) } label: { Image(systemName: "power") }
-                .tint(.red)
+            }
+            headerButton("gearshape", label: "Réglages") { showingSettings = true }
+            headerButton("power", label: "Alimentation") { send(.power) }
         }
-        .font(.title3)
-        .buttonStyle(RemoteCircleButtonStyle(size: 42, fill: .white.opacity(0.12)))
-        .padding(.top, 8)
+        .padding(.vertical, 4)
+    }
+
+    private var displayName: String {
+        guard let television else { return "Choisir une TV" }
+        switch service.connectionState {
+        case .connected: return television.name
+        case .connecting, .discovering, .reconnecting: return television.host
+        case .awaitingAuthorization: return television.host
+        case .failed, .disconnected: return television.name == "Samsung TV" ? television.host : television.name
+        }
+    }
+
+    private func headerButton(_ icon: String, label: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) { Image(systemName: icon).font(.system(size: 17, weight: .semibold)) }
+            .buttonStyle(RemoteCircleButtonStyle(size: 40, fill: .white.opacity(0.12)))
+            .accessibilityLabel(label)
     }
 
     private var remoteControls: some View {
-        HStack(spacing: 22) {
+        HStack(spacing: 0) {
             remoteButton("arrow.uturn.backward", command: .back, label: "Retour")
+            Spacer(minLength: 8)
             remoteButton("house.fill", command: .home, label: "Accueil")
+            Spacer(minLength: 8)
             remoteButton("keyboard", action: { showingKeyboard = true }, label: "Saisir du texte")
+            Spacer(minLength: 8)
             remoteButton("square.grid.2x2", action: { showingApps = true }, label: "Applications")
         }
+        .frame(maxWidth: 340)
+        .frame(maxWidth: .infinity)
     }
 
     private var mediaControls: some View {
-        HStack(spacing: 18) {
+        LazyVGrid(columns: mediaColumns, spacing: 12) {
             remoteButton("speaker.wave.1", command: .volumeDown, label: "Diminuer le volume")
             remoteButton("speaker.slash", command: .mute, label: "Sourdine")
             remoteButton("speaker.wave.3", command: .volumeUp, label: "Augmenter le volume")
@@ -88,6 +114,8 @@ struct RemoteControlView: View {
             remoteButton("pause.fill", command: .pause, label: "Pause")
             remoteButton("forward.fill", command: .fastForward, label: "Avance rapide")
         }
+        .frame(maxWidth: 340)
+        .frame(maxWidth: .infinity)
     }
 
     private func remoteButton(_ icon: String, command: RemoteCommand, label: String) -> some View {
@@ -109,6 +137,7 @@ private struct ConnectionBadge: View {
     var body: some View {
         Label(state.title, systemImage: state.isConnected ? "circle.fill" : "circle")
             .font(.caption2)
+            .lineLimit(1)
             .foregroundStyle(state.isConnected ? .green : .secondary)
     }
 }

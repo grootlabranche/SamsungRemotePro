@@ -8,26 +8,29 @@ struct TouchPad: View {
         GeometryReader { proxy in
             ZStack {
                 Circle().fill(.white.opacity(isPressed ? 0.22 : 0.12))
-                VStack(spacing: 8) {
+                VStack(spacing: 10) {
                     Image(systemName: "hand.draw.fill").font(.system(size: 30, weight: .light))
                     Text("Touchez pour sélectionner\nGlissez pour naviguer")
-                        .font(.caption).multilineTextAlignment(.center).foregroundStyle(.secondary)
+                        .font(.system(size: 15, weight: .regular))
+                        .multilineTextAlignment(.center)
+                        .foregroundStyle(.secondary)
                 }
+                .allowsHitTesting(false)
             }
             .contentShape(Circle())
-            .gesture(
-                DragGesture(minimumDistance: 12)
-                    .onChanged { _ in isPressed = true }
-                    .onEnded { value in
-                        isPressed = false
-                        let translation = value.translation
-                        guard max(abs(translation.width), abs(translation.height)) > 25 else { action(.select); return }
-                        if abs(translation.width) > abs(translation.height) { action(translation.width > 0 ? .right : .left) }
-                        else { action(translation.height > 0 ? .down : .up) }
-                    }
-            )
-            .simultaneousGesture(TapGesture().onEnded { action(.select) })
             .frame(width: min(proxy.size.width, proxy.size.height), height: min(proxy.size.width, proxy.size.height))
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .gesture(DragGesture(minimumDistance: 18)
+                .onChanged { _ in isPressed = true }
+                .onEnded { value in
+                    isPressed = false
+                    let dx = value.translation.width
+                    let dy = value.translation.height
+                    guard max(abs(dx), abs(dy)) > 24 else { action(.select); return }
+                    if abs(dx) > abs(dy) { action(dx > 0 ? .right : .left) }
+                    else { action(dy > 0 ? .down : .up) }
+                })
+            .simultaneousGesture(TapGesture().onEnded { action(.select) })
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("Pavé tactile")

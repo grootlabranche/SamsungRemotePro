@@ -89,3 +89,10 @@ Une vérification de l’appairage et des commandes exige un iPhone physique car
 - `Widgets` et `AppIntents` : widget et activité en direct.
 - `Tests` : unités et intégration opt-in.
 - `BUILD_REPORT.md` : état exact des vérifications réalisées ici.
+
+
+## Dépannage réseau
+- Autoriser l'accès au réseau local dans Réglages iOS.
+- L'iPhone et la TV doivent être sur le même réseau, sans réseau invité ni isolation des clients Wi-Fi.
+- Pour une saisie manuelle, essayer d'abord le port 8001, puis activer le port 8002 si nécessaire.
+- Accepter la demande d'autorisation qui apparaît sur l'écran de la TV lors de la première connexion.

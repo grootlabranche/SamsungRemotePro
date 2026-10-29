@@ -82,10 +82,10 @@ final class SamsungDiscoveryService {
     }
 
     private static func host(fromSSDPResponse response: String) -> String? {
-        let headers = response.split(separator: "\n")
-        guard headers.contains(where: { $0.uppercased().contains("SAMSUNG") }),
-              let location = headers.first(where: { $0.uppercased().hasPrefix("LOCATION:") }) else { return nil }
-        let value = location.dropFirst("LOCATION:".count).trimmingCharacters(in: .whitespacesAndNewlines)
+        let headers = response.split(whereSeparator: \.isNewline).map { String($0).trimmingCharacters(in: .whitespacesAndNewlines) }
+        guard headers.contains(where: { $0.localizedCaseInsensitiveContains("samsung") }),
+              let location = headers.first(where: { $0.lowercased().hasPrefix("location:") }) else { return nil }
+        let value = String(location.dropFirst("LOCATION:".count)).trimmingCharacters(in: .whitespacesAndNewlines)
         return URL(string: value)?.host
     }
 }

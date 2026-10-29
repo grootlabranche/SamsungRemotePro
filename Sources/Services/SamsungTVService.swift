@@ -46,11 +46,11 @@ final class SamsungTVService: ObservableObject {
     func validateAndConnect(host: String, secure: Bool = true) async {
         let normalized = host.trimmingCharacters(in: .whitespacesAndNewlines)
         guard isValidHost(normalized) else { connectionState = .failed(.invalidAddress); return }
-        let tv = await discovery.probe(host: normalized, useSecureConnection: secure) ?? SamsungTV(
-            name: "Samsung TV", host: normalized,
-            port: secure ? AppConfiguration.defaultSecurePort : AppConfiguration.defaultInsecurePort,
-            usesSecureWebSocket: secure
-        )
+        guard let tv = await discovery.probe(host: normalized, useSecureConnection: secure) else {
+            connectionState = .failed(.televisionUnavailable)
+            lastDiagnostic = "Aucun service de télécommande Samsung n’a répondu sur \(normalized):\(secure ? AppConfiguration.defaultSecurePort : AppConfiguration.defaultInsecurePort). Vérifiez l’adresse IP, le même Wi‑Fi et essayez l’autre mode de connexion."
+            return
+        }
         store.save(tv)
         connect(to: tv)
     }

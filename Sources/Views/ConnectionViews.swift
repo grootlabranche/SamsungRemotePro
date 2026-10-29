@@ -48,7 +48,7 @@ struct ManualConnectionView: View {
     @EnvironmentObject private var service: SamsungTVService
     @Environment(\.dismiss) private var dismiss
     @State private var host = ""
-    @State private var useSecureConnection = true
+    @State private var useSecureConnection = false
 
     var body: some View {
         Form {
@@ -57,7 +57,7 @@ struct ManualConnectionView: View {
                     .textInputAutocapitalization(.never)
                     .keyboardType(.numbersAndPunctuation)
                     .autocorrectionDisabled()
-                Toggle("Connexion sécurisée (recommandée)", isOn: $useSecureConnection)
+                Toggle("Connexion sécurisée (port 8002)", isOn: $useSecureConnection)
             }
             Section {
                 Button("Vérifier et connecter") {
@@ -69,7 +69,7 @@ struct ManualConnectionView: View {
                 .disabled(host.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
             }
             Section("Important") {
-                Text("Certains téléviseurs anciens n’exposent que le port non chiffré 8001. N’utilisez ce mode que sur votre réseau domestique de confiance. La connexion sécurisée utilise le port 8002 et la validation TLS standard d’iOS.")
+                Text("Certains téléviseurs anciens n’exposent que le port non chiffré 8001. N’utilisez ce mode que sur votre réseau domestique de confiance. Le mode sécurisé utilise le port 8002. Certaines TV Samsung utilisent un certificat local non reconnu par iOS ; dans ce cas, essayez le port 8001 sur votre réseau domestique.")
                     .font(.footnote)
             }
         }

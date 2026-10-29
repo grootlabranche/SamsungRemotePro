@@ -12,6 +12,7 @@
     <key>CFBundleVersion</key><string>1</string>
     <key>LSRequiresIPhoneOS</key><true/>
     <key>NSLocalNetworkUsageDescription</key><string>Samsung Remote Pro recherche et contrôle votre téléviseur Samsung sur votre réseau local.</string>
+    <key>NSAppTransportSecurity</key><dict><key>NSAllowsLocalNetworking</key><true/></dict>
     <key>NSSupportsLiveActivities</key><true/>
     <key>NSSupportsLiveActivitiesFrequentUpdates</key><false/>
     <key>UIApplicationSceneManifest</key><dict><key>UIApplicationSupportsMultipleScenes</key><false/></dict>
