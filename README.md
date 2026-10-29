@@ -110,8 +110,3 @@ Une vérification de l’appairage et des commandes exige un iPhone physique car
 
 ## Découverte réseau (version expérimentale)
 La recherche combine Bonjour/mDNS (`_samsungmsf._tcp` et `_samsungctl._tcp`) avec un scan IPv4 du sous-réseau Wi-Fi calculé à partir du masque de l’interface `en0`, puis valide les candidats via `/api/v2/` sur 8002 et 8001. Les deux ports sont testés en parallèle et le mode sécurisé est privilégié. Sur les sous-réseaux inhabituellement larges, le scan est limité à une fenêtre de 1 025 adresses autour du téléphone. L’autorisation iOS Réseau local doit être accordée. Certains routeurs isolent les appareils Wi-Fi ou utilisent des VLAN, ce qui peut empêcher la découverte. Les commandes JSON sont émises comme trames WebSocket texte. Voir `BUILD_REPORT.md`.
-
-
-## Correctif watchOS 1.2.9
-
-Le workflow d’archive laisse Xcode sélectionner le SDK adapté à chaque cible (iOS, widgets et watchOS), puis échoue explicitement si le compagnon `SamsungRemoteProWatch.app` n’est pas intégré à l’IPA.
