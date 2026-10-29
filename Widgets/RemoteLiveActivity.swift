@@ -1,7 +1,6 @@
 import ActivityKit
 import AppIntents
 import SwiftUI
-import UIKit
 import WidgetKit
 
 struct RemoteLiveActivityWidget: Widget {
@@ -34,8 +33,7 @@ struct RemoteLiveActivityWidget: Widget {
                         ForEach(apps.prefix(5)) { app in
                             Button(intent: applicationIntent(app)) {
                                 VStack(spacing: 4) {
-                                    LiveActivityAppIcon(app: app, size: 32, tint: tint)
-                                    Text(app.name).font(.system(size: 10)).lineLimit(1).frame(maxWidth: 56)
+                                    LiveActivityAppBadge(app: app, size: 36)
                                 }
                             }
                             .buttonStyle(.plain)
@@ -90,11 +88,7 @@ struct RemoteLiveActivityWidget: Widget {
                                 ForEach(apps.prefix(5)) { app in
                                     Button(intent: applicationIntent(app)) {
                                         VStack(spacing: 4) {
-                                            LiveActivityAppIcon(app: app, size: 27, tint: tint)
-                                            Text(app.name)
-                                                .font(.system(size: 9, weight: .medium))
-                                                .lineLimit(1)
-                                                .frame(maxWidth: 54)
+                                            LiveActivityAppBadge(app: app, size: 30)
                                         }
                                         .frame(maxWidth: .infinity)
                                     }
@@ -156,25 +150,52 @@ struct RemoteLiveActivityWidget: Widget {
     }
 }
 
-private struct LiveActivityAppIcon: View {
+private struct LiveActivityAppBadge: View {
     let app: LiveActivityApp
     let size: CGFloat
-    var tint: Color = Color(hexRGB: "283447")
+
+    private var acronym: String {
+        let value = (app.id + " " + app.name).lowercased()
+        if value.contains("apple-music") || value.contains("apple music") || value.contains("music") { return "AM" }
+        if value.contains("youtube") { return "YT" }
+        if value.contains("disney") { return "D+" }
+        if value.contains("prime") { return "PV" }
+        if value.contains("netflix") { return "N" }
+        if value.contains("spotify") { return "SP" }
+        if value.contains("plex") { return "PX" }
+        let words = app.name.split { !$0.isLetter && !$0.isNumber }
+        if words.count >= 2 { return String(words.prefix(2).compactMap(\.first).map { $0.uppercased() }.joined().prefix(3)) }
+        return String(app.name.filter { $0.isLetter || $0.isNumber }.prefix(2)).uppercased().ifEmpty("TV")
+    }
+
+    private var badgeColor: Color {
+        let value = (app.id + " " + app.name).lowercased()
+        if value.contains("apple-music") || value.contains("apple music") || value.contains("music") { return Color(hexRGB: "FA243C") }
+        if value.contains("youtube") { return Color(hexRGB: "FF0033") }
+        if value.contains("disney") { return Color(hexRGB: "113CCF") }
+        if value.contains("prime") { return Color(hexRGB: "00A8E0") }
+        if value.contains("netflix") { return Color(hexRGB: "E50914") }
+        if value.contains("spotify") { return Color(hexRGB: "1DB954") }
+        if value.contains("plex") { return Color(hexRGB: "E5A00D") }
+        // Deterministic color from the app identifier, with no image or logo payload.
+        let palette = ["6C5CE7", "008F95", "C44569", "4C6FFF", "A35DCC", "287D55"]
+        let index = abs(app.id.unicodeScalars.reduce(0) { ($0 &* 31 &+ Int($1.value)) & 0x7fffffff }) % palette.count
+        return Color(hexRGB: palette[index])
+    }
 
     var body: some View {
-        Group {
-            if let data = app.customIconData, let image = UIImage(data: data) {
-                Image(uiImage: image).resizable().scaledToFill()
-            } else {
-                Image(systemName: "app.fill")
-                    .font(.system(size: size * 0.48, weight: .medium))
-                    .foregroundStyle(.white.opacity(0.9))
-            }
-        }
-        .frame(width: size, height: size)
-        .clipShape(RoundedRectangle(cornerRadius: size * 0.22, style: .continuous))
-        .background(tint.opacity(0.82), in: RoundedRectangle(cornerRadius: size * 0.22, style: .continuous))
+        Text(acronym)
+            .font(.system(size: size * 0.36, weight: .bold, design: .rounded))
+            .foregroundStyle(.white)
+            .frame(width: size, height: size)
+            .background(badgeColor, in: RoundedRectangle(cornerRadius: size * 0.25, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: size * 0.25, style: .continuous).stroke(.white.opacity(0.18), lineWidth: 1))
+            .accessibilityLabel(app.name)
     }
+}
+
+private extension String {
+    func ifEmpty(_ fallback: String) -> String { isEmpty ? fallback : self }
 }
 
 private extension Color {

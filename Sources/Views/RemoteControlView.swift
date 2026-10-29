@@ -15,7 +15,7 @@ struct RemoteControlView: View {
     private var television: SamsungTV? { store.selectedTelevision }
     private var liveActivityApps: [LiveActivityApp] {
         store.favoriteApps.prefix(5).map {
-            LiveActivityApp(id: $0.id, name: String($0.name.prefix(48)), deepLink: nil, customIconData: compactLiveActivityIcon(store.logoData(for: $0.id, appName: $0.name)))
+            LiveActivityApp(id: $0.id, name: String($0.name.prefix(48)), deepLink: nil, customIconData: nil)
         }
     }
 

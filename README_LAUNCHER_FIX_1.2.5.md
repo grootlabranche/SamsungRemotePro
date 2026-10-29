@@ -1,4 +1,4 @@
-# Test checklist — SamsungRemotePro 1.2.5
+# Test checklist — SamsungRemotePro 1.2.6
 
 ## Pourquoi les raccourcis pouvaient casser la Live Activity
 
