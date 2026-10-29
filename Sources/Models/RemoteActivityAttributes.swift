@@ -74,6 +74,39 @@ struct RemoteActivityAttributes: ActivityAttributes {
         var televisionName: String
         var quickAction: LiveActivityQuickAction? = .playPause
         var launcherApps: [LiveActivityApp]? = []
+        /// UI-side optimistic media state; Samsung does not acknowledge every media key.
+        var isPlaying: Bool = false
+        var buttonTintHex: String = "283447"
+
+        private enum CodingKeys: String, CodingKey {
+            case connectionLabel, televisionName, quickAction, launcherApps, isPlaying, buttonTintHex
+        }
+
+        init(
+            connectionLabel: String,
+            televisionName: String,
+            quickAction: LiveActivityQuickAction? = .playPause,
+            launcherApps: [LiveActivityApp]? = [],
+            isPlaying: Bool = false,
+            buttonTintHex: String = "283447"
+        ) {
+            self.connectionLabel = connectionLabel
+            self.televisionName = televisionName
+            self.quickAction = quickAction
+            self.launcherApps = launcherApps
+            self.isPlaying = isPlaying
+            self.buttonTintHex = buttonTintHex
+        }
+
+        init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            connectionLabel = try container.decode(String.self, forKey: .connectionLabel)
+            televisionName = try container.decode(String.self, forKey: .televisionName)
+            quickAction = try container.decodeIfPresent(LiveActivityQuickAction.self, forKey: .quickAction) ?? .playPause
+            launcherApps = try container.decodeIfPresent([LiveActivityApp].self, forKey: .launcherApps) ?? []
+            isPlaying = try container.decodeIfPresent(Bool.self, forKey: .isPlaying) ?? false
+            buttonTintHex = try container.decodeIfPresent(String.self, forKey: .buttonTintHex) ?? "283447"
+        }
     }
 
     var televisionName: String

@@ -11,20 +11,29 @@ final class LiveActivityManager: ObservableObject {
         for television: SamsungTV,
         state: ConnectionState,
         quickAction: LiveActivityQuickAction,
-        launcherApps: [LiveActivityApp]
+        launcherApps: [LiveActivityApp],
+        buttonTintHex: String = "283447"
     ) {
         guard ActivityAuthorizationInfo().areActivitiesEnabled else { return }
         let attributes = RemoteActivityAttributes(televisionName: television.name)
-        let content = makeContent(for: television, state: state, quickAction: quickAction, launcherApps: launcherApps)
 
         // Reuse the existing activity for this TV, avoiding a stack of duplicate islands.
         if let existing = Activity<RemoteActivityAttributes>.activities.first(where: {
             $0.attributes.televisionName == television.name
         }) {
             activity = existing
+            let content = makeContent(
+                for: television, state: state, quickAction: quickAction, launcherApps: launcherApps,
+                buttonTintHex: buttonTintHex, isPlaying: existing.content.state.isPlaying
+            )
             Task { await existing.update(content) }
             return
         }
+
+        let content = makeContent(
+            for: television, state: state, quickAction: quickAction, launcherApps: launcherApps,
+            buttonTintHex: buttonTintHex, isPlaying: false
+        )
 
         do {
             activity = try Activity.request(attributes: attributes, content: content)
@@ -37,7 +46,8 @@ final class LiveActivityManager: ObservableObject {
         for television: SamsungTV,
         state: ConnectionState,
         quickAction: LiveActivityQuickAction,
-        launcherApps: [LiveActivityApp]
+        launcherApps: [LiveActivityApp],
+        buttonTintHex: String = "283447"
     ) async {
         if activity == nil {
             activity = Activity<RemoteActivityAttributes>.activities.first(where: {
@@ -45,7 +55,10 @@ final class LiveActivityManager: ObservableObject {
             })
         }
         guard let activity else { return }
-        await activity.update(makeContent(for: television, state: state, quickAction: quickAction, launcherApps: launcherApps))
+        await activity.update(makeContent(
+            for: television, state: state, quickAction: quickAction, launcherApps: launcherApps,
+            buttonTintHex: buttonTintHex, isPlaying: activity.content.state.isPlaying
+        ))
     }
 
     func end() async {
@@ -57,14 +70,18 @@ final class LiveActivityManager: ObservableObject {
         for television: SamsungTV,
         state: ConnectionState,
         quickAction: LiveActivityQuickAction,
-        launcherApps: [LiveActivityApp]
+        launcherApps: [LiveActivityApp],
+        buttonTintHex: String,
+        isPlaying: Bool
     ) -> ActivityContent<RemoteActivityAttributes.ContentState> {
         ActivityContent(
             state: RemoteActivityAttributes.ContentState(
                 connectionLabel: state.title,
                 televisionName: television.name,
                 quickAction: quickAction,
-                launcherApps: Array(launcherApps.prefix(5))
+                launcherApps: Array(launcherApps.prefix(5)),
+                isPlaying: isPlaying,
+                buttonTintHex: buttonTintHex
             ),
             staleDate: nil
         )

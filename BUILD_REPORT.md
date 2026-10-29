@@ -34,3 +34,22 @@
 - Le raccourci `Lecture / pause` envoie la touche Samsung `KEY_PLAY`. Certaines applications l’interprètent comme une bascule, d’autres comme une simple commande Lecture. Les touches multimédia dépendent de l’app active sur la TV.
 - La détection des changements de volume iPhone est une approximation, seulement au premier plan. Le volume du téléphone peut bouger en parallèle, et les changements au minimum/maximum ne sont pas détectés si la valeur ne change pas.
 - Une découverte qui marche dépend encore du réseau local, du réglage Réseau local iOS, du firmware de la TV et de l’acceptation du dialogue d’appairage.
+
+## Modifications de l’édition 1.2.0 (archive source)
+- La Live Activity existante est retrouvée et réutilisée au retour dans l’app ; l’app tente une reconnexion au téléviseur sélectionné si « Reconnexion automatique » est activé.
+- Les changements de favoris, logos et couleur des boutons déclenchent une actualisation de l’état ActivityKit. Les logos transmis au widget sont réduits à 96×96 pixels pour limiter leur poids.
+- La commande Lecture/Pause est désormais une bascule d’interface : l’icône passe de Lecture à Pause, puis inversement après chaque commande envoyée. Cet état est optimiste, car le téléviseur ne confirme pas systématiquement les commandes média.
+- Réglage de couleur ajouté dans Réglages > Personnalisation. La couleur est utilisée pour les boutons ronds, le rocker de volume et les raccourcis de la Live Activity.
+- Ajout de l’action App Intent « Envoyer une commande à la TV Samsung » avec un sélecteur couvrant toutes les commandes usuelles disponibles (directions, valider, retour, accueil, menu, alimentation, volume, sourdine, lecture/pause, avance/retour rapides et chaînes). Dix actions fréquentes disposent aussi de phrases Siri préconfigurées.
+- L’état Live Activity décode aussi les anciennes données sans les champs de couleur et d’état de lecture.
+- Version du projet mise à 1.2.0.
+
+## Vérification de l’édition 1.2.0
+- Tous les fichiers Swift du projet passent le contrôle syntaxique `swiftc -frontend -parse`.
+- Les fichiers Xcode `.pbxproj` et les deux fichiers plist passent `plutil -lint`.
+- Aucune compilation Xcode/iOS complète n’a été possible ici : ces contrôles valident la syntaxe et la structure, pas le build final ni le comportement sur iPhone/TV.
+
+## Limites de l’édition 1.2.0
+- iOS ne fournit pas de notification fiable au moment précis où l’utilisateur force la fermeture de l’app. Une Live Activity peut donc rester affichée après un balayage forcé ; elle est réutilisée et rafraîchie à la prochaine ouverture.
+- Les logos sont sauvegardés dans le conteneur local de l’app. Une désinstallation complète peut les effacer ; ils ne peuvent pas être restaurés automatiquement après suppression sans sauvegarde/importation ou synchronisation cloud.
+- L’état Lecture/Pause reflète la dernière commande envoyée, pas une confirmation de lecture réelle provenant de la télévision.

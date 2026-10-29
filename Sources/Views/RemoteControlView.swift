@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 struct RemoteControlView: View {
     @EnvironmentObject private var store: TVStore
@@ -14,7 +15,7 @@ struct RemoteControlView: View {
     private var television: SamsungTV? { store.selectedTelevision }
     private var liveActivityApps: [LiveActivityApp] {
         store.favoriteApps.prefix(5).map {
-            LiveActivityApp(id: $0.id, name: $0.name, deepLink: $0.deepLink, customIconData: store.logoData(for: $0.id))
+            LiveActivityApp(id: $0.id, name: $0.name, deepLink: $0.deepLink, customIconData: compactLiveActivityIcon(store.logoData(for: $0.id)))
         }
     }
 
@@ -58,21 +59,48 @@ struct RemoteControlView: View {
                     for: television,
                     state: service.connectionState,
                     quickAction: store.preferences.dynamicIslandAction,
-                    launcherApps: liveActivityApps
+                    launcherApps: liveActivityApps,
+                    buttonTintHex: store.preferences.shortcutButtonColorHex
                 )
             }
         }
         .onAppear {
             updateHardwareVolumeBridge()
-            if let television, service.connectionState.isConnected {
-                startOrRefreshLiveActivity(for: television)
+            if let television {
+                if service.connectionState.isConnected {
+                    startOrRefreshLiveActivity(for: television)
+                } else if store.preferences.reconnectAutomatically {
+                    service.connect(to: television)
+                }
+                // Rehydrate/update an existing activity immediately; a new one is created on connect.
+                Task {
+                    await liveActivity.update(
+                        for: television, state: service.connectionState,
+                        quickAction: store.preferences.dynamicIslandAction, launcherApps: liveActivityApps,
+                        buttonTintHex: store.preferences.shortcutButtonColorHex
+                    )
+                }
             }
         }
         .onDisappear { hardwareVolumeButtons.stop() }
-        .onChange(of: scenePhase) { _, _ in updateHardwareVolumeBridge() }
+        .onChange(of: scenePhase) { _, newPhase in
+            updateHardwareVolumeBridge()
+            if newPhase == .active, let television {
+                if service.connectionState.isConnected {
+                    startOrRefreshLiveActivity(for: television)
+                } else if store.preferences.reconnectAutomatically,
+                          service.connectionState == .disconnected {
+                    service.connect(to: television)
+                } else {
+                    refreshExistingLiveActivity(for: television)
+                }
+            }
+        }
         .onChange(of: store.preferences.useHardwareVolumeButtons) { _, _ in updateHardwareVolumeBridge() }
         .onChange(of: store.preferences.dynamicIslandAction) { _, _ in refreshLiveActivityIfConnected() }
+        .onChange(of: store.preferences.shortcutButtonColorHex) { _, _ in refreshLiveActivityIfConnected() }
         .onChange(of: store.favoriteApps) { _, _ in refreshLiveActivityIfConnected() }
+        .onChange(of: store.customAppIcons) { _, _ in refreshLiveActivityIfConnected() }
     }
 
     private var header: some View {
@@ -99,7 +127,7 @@ struct RemoteControlView: View {
                 .font(.system(size: 18, weight: .medium))
                 .foregroundStyle(tint)
         }
-        .buttonStyle(RemoteCircleButtonStyle(size: 42, fill: .white.opacity(0.10)))
+        .buttonStyle(RemoteCircleButtonStyle(size: 42, fill: Color(hexRGB: store.preferences.shortcutButtonColorHex).opacity(0.82)))
         .accessibilityLabel(label)
     }
 
@@ -137,7 +165,7 @@ struct RemoteControlView: View {
             }
             .buttonStyle(.plain)
             .frame(width: 74, height: 108)
-            .background(.white.opacity(0.10), in: Capsule())
+            .background(Color(hexRGB: store.preferences.shortcutButtonColorHex).opacity(0.82), in: Capsule())
             .overlay(Capsule().stroke(.white.opacity(0.12), lineWidth: 1))
         }
         .frame(maxWidth: .infinity)
@@ -163,7 +191,7 @@ struct RemoteControlView: View {
         Button(action: action) {
             Image(systemName: icon).font(.system(size: 20, weight: .semibold))
         }
-        .buttonStyle(RemoteCircleButtonStyle(size: size, fill: .white.opacity(0.10)))
+        .buttonStyle(RemoteCircleButtonStyle(size: size, fill: Color(hexRGB: store.preferences.shortcutButtonColorHex).opacity(0.82)))
         .accessibilityLabel(label)
     }
 
@@ -177,13 +205,39 @@ struct RemoteControlView: View {
             for: television,
             state: service.connectionState,
             quickAction: store.preferences.dynamicIslandAction,
-            launcherApps: liveActivityApps
+            launcherApps: liveActivityApps,
+            buttonTintHex: store.preferences.shortcutButtonColorHex
         )
     }
 
     private func refreshLiveActivityIfConnected() {
-        guard let television, service.connectionState.isConnected else { return }
-        startOrRefreshLiveActivity(for: television)
+        guard let television else { return }
+        if service.connectionState.isConnected {
+            startOrRefreshLiveActivity(for: television)
+        } else {
+            refreshExistingLiveActivity(for: television)
+        }
+    }
+
+    private func refreshExistingLiveActivity(for television: SamsungTV) {
+        Task {
+            await liveActivity.update(
+                for: television, state: service.connectionState,
+                quickAction: store.preferences.dynamicIslandAction, launcherApps: liveActivityApps,
+                buttonTintHex: store.preferences.shortcutButtonColorHex
+            )
+        }
+    }
+
+    /// ActivityKit state should stay small; 96 px is enough for the 27–32 pt launcher tiles.
+    private func compactLiveActivityIcon(_ data: Data?) -> Data? {
+        guard let data, let image = UIImage(data: data) else { return data }
+        let size = CGSize(width: 96, height: 96)
+        let format = UIGraphicsImageRendererFormat()
+        format.scale = 1
+        format.opaque = false
+        let renderer = UIGraphicsImageRenderer(size: size, format: format)
+        return renderer.image { _ in image.draw(in: CGRect(origin: .zero, size: size)) }.pngData() ?? data
     }
 
     private func updateHardwareVolumeBridge() {

@@ -9,6 +9,9 @@ struct RemoteLiveActivityWidget: Widget {
         ActivityConfiguration(for: RemoteActivityAttributes.self) { context in
             let action = context.state.quickAction ?? .playPause
             let apps = context.state.launcherApps ?? []
+            let actionTitle = displayTitle(action, isPlaying: context.state.isPlaying)
+            let actionSymbol = displaySymbol(action, isPlaying: context.state.isPlaying)
+            let tint = Color(hexRGB: context.state.buttonTintHex)
             VStack(alignment: .leading, spacing: 10) {
                 HStack(spacing: 10) {
                     Image(systemName: "tv.fill").foregroundStyle(.blue)
@@ -18,20 +21,20 @@ struct RemoteLiveActivityWidget: Widget {
                     }
                     Spacer()
                     actionControl(action) {
-                        Image(systemName: action.systemImage)
+                        Image(systemName: actionSymbol)
                             .font(.title3.weight(.semibold))
                             .frame(width: 40, height: 40)
-                            .background(.white.opacity(0.10), in: Circle())
+                            .background(tint.opacity(0.82), in: Circle())
                     }
                     .buttonStyle(.plain)
-                    .accessibilityLabel(action.title)
+                    .accessibilityLabel(actionTitle)
                 }
                 if !apps.isEmpty {
                     HStack(spacing: 12) {
                         ForEach(apps.prefix(5)) { app in
                             Button(intent: applicationIntent(app)) {
                                 VStack(spacing: 4) {
-                                    LiveActivityAppIcon(app: app, size: 32)
+                                    LiveActivityAppIcon(app: app, size: 32, tint: tint)
                                     Text(app.name).font(.system(size: 10)).lineLimit(1).frame(maxWidth: 56)
                                 }
                             }
@@ -48,6 +51,9 @@ struct RemoteLiveActivityWidget: Widget {
         } dynamicIsland: { context in
             let action = context.state.quickAction ?? .playPause
             let apps = context.state.launcherApps ?? []
+            let actionTitle = displayTitle(action, isPlaying: context.state.isPlaying)
+            let actionSymbol = displaySymbol(action, isPlaying: context.state.isPlaying)
+            let tint = Color(hexRGB: context.state.buttonTintHex)
             return DynamicIsland {
                 DynamicIslandExpandedRegion(.leading) {
                     Image(systemName: "tv.fill").foregroundStyle(.blue)
@@ -60,22 +66,23 @@ struct RemoteLiveActivityWidget: Widget {
                 }
                 DynamicIslandExpandedRegion(.trailing) {
                     actionControl(action) {
-                        Image(systemName: action.systemImage)
+                        Image(systemName: actionSymbol)
                             .font(.title3.weight(.semibold))
                             .frame(width: 36, height: 36)
+                            .background(tint.opacity(0.82), in: Circle())
                     }
                     .buttonStyle(.plain)
-                    .accessibilityLabel(action.title)
+                    .accessibilityLabel(actionTitle)
                 }
                 DynamicIslandExpandedRegion(.bottom) {
                     VStack(spacing: 10) {
                         actionControl(action) {
-                            Label(action.title, systemImage: action.systemImage)
+                            Label(actionTitle, systemImage: actionSymbol)
                                 .font(.subheadline.weight(.medium))
                                 .frame(maxWidth: .infinity, alignment: .leading)
                                 .padding(.horizontal, 12)
                                 .padding(.vertical, 8)
-                                .background(.white.opacity(0.10), in: Capsule())
+                                .background(tint.opacity(0.82), in: Capsule())
                         }
                         .buttonStyle(.plain)
                         if !apps.isEmpty {
@@ -83,7 +90,7 @@ struct RemoteLiveActivityWidget: Widget {
                                 ForEach(apps.prefix(5)) { app in
                                     Button(intent: applicationIntent(app)) {
                                         VStack(spacing: 4) {
-                                            LiveActivityAppIcon(app: app, size: 27)
+                                            LiveActivityAppIcon(app: app, size: 27, tint: tint)
                                             Text(app.name)
                                                 .font(.system(size: 9, weight: .medium))
                                                 .lineLimit(1)
@@ -106,7 +113,7 @@ struct RemoteLiveActivityWidget: Widget {
                 Image(systemName: "tv.fill")
             } compactTrailing: {
                 actionControl(action) {
-                    Image(systemName: action.systemImage)
+                    Image(systemName: actionSymbol)
                 }
                 .buttonStyle(.plain)
             } minimal: {
@@ -132,6 +139,14 @@ struct RemoteLiveActivityWidget: Widget {
         }
     }
 
+    private func displayTitle(_ action: LiveActivityQuickAction, isPlaying: Bool) -> String {
+        action == .playPause ? (isPlaying ? "Pause" : "Lecture") : action.title
+    }
+
+    private func displaySymbol(_ action: LiveActivityQuickAction, isPlaying: Bool) -> String {
+        action == .playPause ? (isPlaying ? "pause.fill" : "play.fill") : action.systemImage
+    }
+
     private func actionIntent(_ action: LiveActivityQuickAction) -> RemoteActivityActionIntent {
         RemoteActivityActionIntent(actionRawValue: action.rawValue)
     }
@@ -144,6 +159,7 @@ struct RemoteLiveActivityWidget: Widget {
 private struct LiveActivityAppIcon: View {
     let app: LiveActivityApp
     let size: CGFloat
+    var tint: Color = Color(hexRGB: "283447")
 
     var body: some View {
         Group {
@@ -157,6 +173,16 @@ private struct LiveActivityAppIcon: View {
         }
         .frame(width: size, height: size)
         .clipShape(RoundedRectangle(cornerRadius: size * 0.22, style: .continuous))
-        .background(.white.opacity(0.09), in: RoundedRectangle(cornerRadius: size * 0.22, style: .continuous))
+        .background(tint.opacity(0.82), in: RoundedRectangle(cornerRadius: size * 0.22, style: .continuous))
+    }
+}
+
+private extension Color {
+    init(hexRGB: String) {
+        let cleaned = hexRGB.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
+        let value = UInt64(cleaned, radix: 16) ?? 0x283447
+        self.init(.sRGB, red: Double((value >> 16) & 0xFF) / 255.0,
+                  green: Double((value >> 8) & 0xFF) / 255.0,
+                  blue: Double(value & 0xFF) / 255.0, opacity: 1)
     }
 }

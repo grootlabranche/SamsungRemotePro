@@ -1,4 +1,6 @@
 import Foundation
+import SwiftUI
+import UIKit
 
 enum NavigationMode: String, CaseIterable, Codable, Identifiable {
     case gestures
@@ -15,10 +17,12 @@ struct RemotePreferences: Codable, Equatable {
     var showExtraCommands = true
     var dynamicIslandAction: LiveActivityQuickAction = .playPause
     var useHardwareVolumeButtons = false
+    /// Hex RGB color used for remote shortcut button backgrounds.
+    var shortcutButtonColorHex = "283447"
 
     private enum CodingKeys: String, CodingKey {
         case reconnectAutomatically, hapticsEnabled, navigationMode, showExtraCommands
-        case dynamicIslandAction, useHardwareVolumeButtons
+        case dynamicIslandAction, useHardwareVolumeButtons, shortcutButtonColorHex
     }
 
     init() {}
@@ -31,5 +35,26 @@ struct RemotePreferences: Codable, Equatable {
         showExtraCommands = try container.decodeIfPresent(Bool.self, forKey: .showExtraCommands) ?? true
         dynamicIslandAction = try container.decodeIfPresent(LiveActivityQuickAction.self, forKey: .dynamicIslandAction) ?? .playPause
         useHardwareVolumeButtons = try container.decodeIfPresent(Bool.self, forKey: .useHardwareVolumeButtons) ?? false
+        shortcutButtonColorHex = try container.decodeIfPresent(String.self, forKey: .shortcutButtonColorHex) ?? "283447"
+    }
+}
+
+/// Small, stable RGB hex bridge for saving a SwiftUI Color in UserDefaults.
+extension Color {
+    init(hexRGB: String) {
+        let cleaned = hexRGB.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
+        let value = UInt64(cleaned, radix: 16) ?? 0x283447
+        let red = Double((value >> 16) & 0xFF) / 255.0
+        let green = Double((value >> 8) & 0xFF) / 255.0
+        let blue = Double(value & 0xFF) / 255.0
+        self.init(.sRGB, red: red, green: green, blue: blue, opacity: 1)
+    }
+
+    var rgbHexString: String {
+        guard let components = UIColor(self).cgColor.components, components.count >= 3 else { return "283447" }
+        let red = Int((components[0] * 255).rounded())
+        let green = Int((components[1] * 255).rounded())
+        let blue = Int((components[2] * 255).rounded())
+        return String(format: "%02X%02X%02X", red, green, blue)
     }
 }

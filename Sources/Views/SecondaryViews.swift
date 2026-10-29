@@ -503,7 +503,11 @@ struct SettingsView: View {
                 } label: {
                     Label("Logos personnalisés des apps TV", systemImage: "app.badge")
                 }
-                Text("Choisissez une image pour chaque application détectée ou favorite, recadrez-la et réutilisez-la dans la télécommande et la Dynamic Island.")
+                ColorPicker("Couleur des boutons", selection: Binding(
+                    get: { Color(hexRGB: store.preferences.shortcutButtonColorHex) },
+                    set: { store.preferences.shortcutButtonColorHex = $0.rgbHexString }
+                ), supportsOpacity: false)
+                Text("La couleur s’applique aux boutons ronds, au rocker de volume et aux raccourcis de la Live Activity. Elle est synchronisée dans l’état de la Dynamic Island.")
                     .font(.footnote).foregroundStyle(.secondary)
             }
             Section("Dynamic Island") {
@@ -528,7 +532,7 @@ struct SettingsView: View {
                 }
             }
             Section("À propos") {
-                LabeledContent("Version", value: "1.1.2")
+                LabeledContent("Version", value: "1.2.0")
                 Text("Les boutons d’action des Live Activities exécutent une LiveActivityIntent dans le processus de l’app sans afficher son interface. Toucher le fond de l’activité ouvre toujours la télécommande.")
                     .font(.footnote).foregroundStyle(.secondary)
             }
