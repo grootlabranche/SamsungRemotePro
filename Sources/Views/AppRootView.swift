@@ -15,6 +15,39 @@ struct AppRootView: View {
         }
         .preferredColorScheme(.dark)
         .sheet(isPresented: $showingPicker) { TelevisionPickerView() }
+        .onOpenURL(perform: handleDeepLink)
+    }
+
+    private func handleDeepLink(_ url: URL) {
+        guard url.scheme == "samsungremotepro", url.host == "remote" else { return }
+        let query = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems ?? []
+
+        if let appID = query.first(where: { $0.name == "launchApp" })?.value,
+           let app = store.favoriteApps.first(where: { $0.id == appID }) {
+            Task { await service.sendFromShortcut(.launchApplication(app)) }
+            return
+        }
+
+        guard let rawAction = query.first(where: { $0.name == "action" })?.value,
+              let action = LiveActivityQuickAction(rawValue: rawAction),
+              let command = command(for: action) else { return }
+        Task { await service.sendFromShortcut(command) }
+    }
+
+    private func command(for action: LiveActivityQuickAction) -> RemoteCommand? {
+        switch action {
+        case .openRemote: return nil
+        case .playPause: return .playPause
+        case .play: return .play
+        case .pause: return .pause
+        case .rewind: return .rewind
+        case .fastForward: return .fastForward
+        case .volumeUp: return .volumeUp
+        case .volumeDown: return .volumeDown
+        case .mute: return .mute
+        case .back: return .back
+        case .home: return .home
+        }
     }
 }
 

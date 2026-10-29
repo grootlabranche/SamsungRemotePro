@@ -12,7 +12,11 @@ Télécommande iOS native (SwiftUI) pour téléviseurs Samsung compatibles avec 
 - Réessais de connexion limités, délai de 12 s, diagnostic lisible et journalisation sans jeton ni mot de passe.
 - Demande de liste d’applications lorsqu’elle est exposée par la TV, et favoris manuels à partir d’un identifiant connu ; aucun identifiant n’est inventé.
 - Saisie de texte par `SendInputString` Base64 (avec début/fin de session), uniquement si l’écran/l’application TV l’accepte.
-- Widget petit/moyen et activité en direct qui ouvrent l’app ; ils ne gardent pas de socket et n’exécutent pas de réseau prolongé en extension. Cette édition Sideloadly n’utilise aucun App Group : le widget est un raccourci générique et ne lit pas le nom de la TV sélectionnée.
+- Icône d’application issue du visuel fourni, intégrée à l’asset catalog iOS.
+- Interface principale réorganisée selon le visuel : Retour / Accueil / Applications, bascule de volume unique avec sourdine, puis Retour rapide / Lecture-pause / Avance rapide.
+- Live Activity démarrée automatiquement après connexion, avec choix de l’action rapide et jusqu’à cinq apps favorites. Un appui long ouvre la présentation développée iOS ; les cinq apps peuvent avoir un logo importé depuis Photos.
+- Widget petit/moyen conservé. Pour cette édition Sideloadly sans App Group, les liens de la Live Activity ouvrent brièvement l’app, qui envoie ensuite la commande avec sa session WebSocket et son jeton existants.
+- Option expérimentale pour traduire les changements du volume système en commandes de volume TV, uniquement quand l’app est au premier plan. iOS peut modifier aussi le volume de l’iPhone : les touches physiques ne sont pas exposées comme des événements directs aux apps tierces.
 - Tests unitaires, test d’intégration opt-in et scripts de compilation/archivage macOS.
 
 ## Compatibilité réelle et protocole
@@ -54,7 +58,8 @@ La découverte Bonjour utilise le navigateur réseau intégré à iOS et déclar
 - Le volume peut être géré par une barre de son/amplificateur HDMI ARC plutôt que par la TV. Dans ce cas, les touches réseau TV peuvent n’avoir aucun effet.
 - Le réveil depuis veille complète n’est pas garanti. `KEY_POWER` ne peut être envoyé qu’à une TV déjà joignable ; Wake-on-LAN n’est pas implémenté car il exige une adresse MAC fiable et un réglage de veille réseau du téléviseur.
 - La liste complète des applications installées et les métadonnées de lecture ne sont pas exposées de façon fiable par ce protocole. Les favoris sont donc manuels. Aucun titre de streaming fictif n’est affiché sur l’écran verrouillé.
-- La Live Activity est explicitement déclenchée par l’utilisateur, peut être arrêtée par iOS et ne maintient aucune connexion réseau persistante. Le widget/île dynamique ouvrent l’app pour les actions.
+- La Live Activity est démarrée automatiquement lorsque le canal TV est connecté, mais reste gérée par iOS et peut être arrêtée par le système. Elle ne maintient pas de connexion réseau indépendante. Les raccourcis de l’Île dynamique ouvrent l’app pour envoyer la commande, car cette édition ne partage pas le jeton/session réseau avec l’extension via App Groups.
+- Les boutons physiques de volume sont observés via `AVAudioSession.outputVolume`, pas interceptés directement. Cette fonction est volontairement opt-in et active seulement au premier plan ; elle peut également modifier le volume système de l’iPhone et ne détecte pas forcément les pressions quand le volume est déjà à sa limite.
 - La saisie de texte dépend du contexte IME fourni par la TV et peut être ignorée par certaines apps.
 - iOS ne donne pas à une app tierce un contrôle universel des contrôles multimédias de l’écran verrouillé d’une TV. Cette app ne détourne pas les API audio pour simuler ce comportement.
 - Le certificat TLS fourni par certaines TV peut être auto-signé. Pour tenir compte des certificats auto-signés de certains téléviseurs, le délégué accepte le certificat présenté uniquement lorsqu’il se connecte à une adresse IPv4 privée/link-local. Cela ne prouve pas cryptographiquement l’identité de la TV : ne connectez que votre propre téléviseur sur un réseau de confiance. Si la connexion sécurisée ne répond pas, l’app essaie l’autre port; le port 8001 transmet les échanges sans chiffrement.

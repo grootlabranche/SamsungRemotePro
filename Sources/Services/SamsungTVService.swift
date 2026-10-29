@@ -91,6 +91,29 @@ final class SamsungTVService: ObservableObject {
         connectionState = .disconnected
     }
 
+    /// Used by Live Activity deep links: reconnect if the app was suspended and
+    /// wait briefly for the WebSocket handshake before sending a one-shot command.
+    func sendFromShortcut(_ command: RemoteCommand) async {
+        if !connectionState.isConnected {
+            guard let television = store.selectedTelevision else {
+                lastDiagnostic = "Choisissez d’abord un téléviseur pour utiliser ce raccourci."
+                return
+            }
+            connect(to: television)
+            for _ in 0..<40 {
+                if connectionState.isConnected {
+                    await send(command)
+                    return
+                }
+                if case .failed = connectionState { return }
+                try? await Task.sleep(nanoseconds: 250_000_000)
+            }
+            lastDiagnostic = "La commande rapide a expiré avant la connexion. Vérifiez l’autorisation affichée sur la TV."
+            return
+        }
+        await send(command)
+    }
+
     func send(_ command: RemoteCommand) async {
         guard connectionState.isConnected else {
             connectionState = .failed(.connectionLost)

@@ -74,9 +74,9 @@ enum SamsungCommandMapper {
         case .mute: return "KEY_MUTE"
         case .play: return "KEY_PLAY"
         case .pause: return "KEY_PAUSE"
-        // Samsung documents distinct KEY_PLAY and KEY_PAUSE keys for this channel.
-        // A universal toggle key is not established for the target model.
-        case .playPause: return nil
+        // KEY_PLAY is the closest available toggle for Samsung media apps.
+        // Some TV applications interpret it as Play-only rather than Play/Pause.
+        case .playPause: return "KEY_PLAY"
         case .rewind: return "KEY_REWIND"
         case .fastForward: return "KEY_FF"
         case .channelUp: return "KEY_CHUP"
