@@ -10,3 +10,8 @@
 
 ## Limites de validation
 Le projet n'a pas été compilé avec Xcode dans cet environnement. La découverte SSDP/multicast peut encore dépendre des restrictions iOS et du réseau Wi-Fi ; l'autorisation « Réseau local » doit être acceptée sur l'iPhone. Pour tester la connexion, utiliser d'abord l'IP réelle de la TV, même Wi-Fi, puis essayer 8001 et 8002.
+
+
+## Correctif de découverte réseau
+
+La découverte SSDP interroge maintenant plusieurs cibles (ssdp:all, upnp:rootdevice et le service RemoteControlReceiver Samsung). Le parseur ne filtre plus les réponses sur le mot « Samsung » avant vérification : chaque hôte trouvé doit encore répondre à l’API Samsung pour être retenu. Ce changement améliore la couverture SSDP, mais ne garantit pas la découverte si iOS/le routeur bloque le multicast. La validation TLS standard peut encore empêcher la sonde HTTPS sur certains téléviseurs avec certificat local; cette archive ne prétend pas corriger ce point du transport WebSocket. Compilation Xcode réelle non exécutée dans cet environnement.

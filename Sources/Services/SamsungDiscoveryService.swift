@@ -32,20 +32,30 @@ final class SamsungDiscoveryService {
     }
 
     private func discoverHosts(timeout: TimeInterval) async -> [String] {
+        // Samsung models and firmware do not all answer the same SSDP search target.
+        // Collect responses from several standard targets and do not require the
+        // response itself to contain the word "Samsung"; the HTTP API probe below
+        // performs the actual device verification.
         await withCheckedContinuation { continuation in
             let endpoint = NWEndpoint.hostPort(host: "239.255.255.250", port: 1900)
             let connection = NWConnection(to: endpoint, using: .udp)
+            let lock = NSLock()
             var hosts = Set<String>()
-            let request = "M-SEARCH * HTTP/1.1\r\nHOST: 239.255.255.250:1900\r\nMAN: \"ssdp:discover\"\r\nMX: 2\r\nST: \(searchTarget)\r\n\r\n"
+            var finished = false
+            let targets = ["ssdp:all", "upnp:rootdevice", "urn:samsung.com:device:RemoteControlReceiver:1"]
             connection.stateUpdateHandler = { state in
                 guard case .ready = state else { return }
-                connection.send(content: Data(request.utf8), completion: .contentProcessed { _ in })
+                for target in targets {
+                    let request = "M-SEARCH * HTTP/1.1\r\nHOST: 239.255.255.250:1900\r\nMAN: \"ssdp:discover\"\r\nMX: 2\r\nST: \(target)\r\n\r\n"
+                    connection.send(content: Data(request.utf8), completion: .contentProcessed { _ in })
+                }
                 func receive() {
                     connection.receiveMessage { data, _, _, error in
-                        guard error == nil else { return }
-                        if let data, let response = String(data: data, encoding: .utf8),
-                           let host = Self.host(fromSSDPResponse: response) { hosts.insert(host) }
-                        receive()
+                        if error == nil, let data, let response = String(data: data, encoding: .utf8),
+                           let host = Self.host(fromSSDPResponse: response) {
+                            lock.lock(); hosts.insert(host); lock.unlock()
+                        }
+                        if error == nil { receive() }
                     }
                 }
                 receive()
@@ -53,7 +63,12 @@ final class SamsungDiscoveryService {
             connection.start(queue: queue)
             queue.asyncAfter(deadline: .now() + timeout) {
                 connection.cancel()
-                continuation.resume(returning: Array(hosts))
+                lock.lock()
+                let result = Array(hosts)
+                let shouldResume = !finished
+                finished = true
+                lock.unlock()
+                if shouldResume { continuation.resume(returning: result) }
             }
         }
     }
@@ -83,9 +98,9 @@ final class SamsungDiscoveryService {
 
     private static func host(fromSSDPResponse response: String) -> String? {
         let headers = response.split(whereSeparator: \.isNewline).map { String($0).trimmingCharacters(in: .whitespacesAndNewlines) }
-        guard headers.contains(where: { $0.localizedCaseInsensitiveContains("samsung") }),
-              let location = headers.first(where: { $0.lowercased().hasPrefix("location:") }) else { return nil }
+        guard let location = headers.first(where: { $0.lowercased().hasPrefix("location:") }) else { return nil }
         let value = String(location.dropFirst("LOCATION:".count)).trimmingCharacters(in: .whitespacesAndNewlines)
-        return URL(string: value)?.host
+        guard let url = URL(string: value), let host = url.host, !host.isEmpty else { return nil }
+        return host
     }
 }
