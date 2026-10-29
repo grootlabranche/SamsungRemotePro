@@ -18,5 +18,12 @@ final class ModelsTests: XCTestCase {
         let preferences = RemotePreferences()
         XCTAssertTrue(preferences.reconnectAutomatically)
         XCTAssertEqual(preferences.navigationMode, .gestures)
+        XCTAssertFalse(preferences.liveActivityEnabled, "Live Activity must be opt-in by default")
+    }
+
+    func testOlderPreferencesDecodeWithLiveActivityDisabled() throws {
+        let legacyJSON = Data("{\"reconnectAutomatically\":true,\"hapticsEnabled\":true}".utf8)
+        let preferences = try JSONDecoder().decode(RemotePreferences.self, from: legacyJSON)
+        XCTAssertFalse(preferences.liveActivityEnabled)
     }
 }

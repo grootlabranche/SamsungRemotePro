@@ -51,56 +51,43 @@ struct RemoteControlView: View {
             .sheet(isPresented: $showingDiagnostics) { NavigationStack { DiagnosticView() } }
         }
         .task(id: service.connectionState.title) {
-            guard let television else { return }
-            if service.connectionState.isConnected {
-                startOrRefreshLiveActivity(for: television)
-            } else {
-                await liveActivity.update(
-                    for: television,
-                    state: service.connectionState,
-                    quickAction: store.preferences.dynamicIslandAction,
-                    launcherApps: liveActivityApps,
-                    buttonTintHex: store.preferences.shortcutButtonColorHex
-                )
-            }
+            // Connection changes may update an existing activity, but must not create
+            // one: a dismissed activity is restored only when the app is opened/active.
+            guard store.preferences.liveActivityEnabled, let television else { return }
+            refreshExistingLiveActivity(for: television)
         }
         .onAppear {
             updateHardwareVolumeBridge()
-            if let television {
-                if service.connectionState.isConnected {
-                    startOrRefreshLiveActivity(for: television)
-                } else if store.preferences.reconnectAutomatically {
-                    service.connect(to: television)
-                }
-                // Rehydrate/update an existing activity immediately; a new one is created on connect.
-                Task {
-                    await liveActivity.update(
-                        for: television, state: service.connectionState,
-                        quickAction: store.preferences.dynamicIslandAction, launcherApps: liveActivityApps,
-                        buttonTintHex: store.preferences.shortcutButtonColorHex
-                    )
-                }
+            synchronizeLiveActivityForCurrentState()
+            if let television,
+               !service.connectionState.isConnected,
+               store.preferences.reconnectAutomatically {
+                service.connect(to: television)
             }
         }
         .onDisappear { hardwareVolumeButtons.stop() }
         .onChange(of: scenePhase) { _, newPhase in
             updateHardwareVolumeBridge()
-            if newPhase == .active, let television {
-                if service.connectionState.isConnected {
-                    startOrRefreshLiveActivity(for: television)
-                } else if store.preferences.reconnectAutomatically,
-                          service.connectionState == .disconnected {
+            if newPhase == .active {
+                // Returning to the foreground is an explicit recovery point. If the
+                // user dismissed the activity, create exactly one replacement here.
+                synchronizeLiveActivityForCurrentState()
+                if let television,
+                   !service.connectionState.isConnected,
+                   store.preferences.reconnectAutomatically,
+                   service.connectionState == .disconnected {
                     service.connect(to: television)
-                } else {
-                    refreshExistingLiveActivity(for: television)
                 }
             }
         }
+        .onChange(of: store.preferences.liveActivityEnabled) { _, _ in
+            synchronizeLiveActivityForCurrentState()
+        }
         .onChange(of: store.preferences.useHardwareVolumeButtons) { _, _ in updateHardwareVolumeBridge() }
-        .onChange(of: store.preferences.dynamicIslandAction) { _, _ in refreshLiveActivityIfConnected() }
-        .onChange(of: store.preferences.shortcutButtonColorHex) { _, _ in refreshLiveActivityIfConnected() }
-        .onChange(of: store.favoriteApps) { _, _ in refreshLiveActivityIfConnected() }
-        .onChange(of: store.customAppIcons) { _, _ in refreshLiveActivityIfConnected() }
+        .onChange(of: store.preferences.dynamicIslandAction) { _, _ in refreshLiveActivityIfPresent() }
+        .onChange(of: store.preferences.shortcutButtonColorHex) { _, _ in refreshLiveActivityIfPresent() }
+        .onChange(of: store.favoriteApps) { _, _ in refreshLiveActivityIfPresent() }
+        .onChange(of: store.customAppIcons) { _, _ in refreshLiveActivityIfPresent() }
     }
 
     private var header: some View {
@@ -210,23 +197,27 @@ struct RemoteControlView: View {
         )
     }
 
-    private func refreshLiveActivityIfConnected() {
-        guard let television else { return }
-        if service.connectionState.isConnected {
-            startOrRefreshLiveActivity(for: television)
-        } else {
-            refreshExistingLiveActivity(for: television)
+    private func synchronizeLiveActivityForCurrentState() {
+        guard store.preferences.liveActivityEnabled, let television else {
+            // Also removes any activity left by an older build when the new opt-in
+            // preference has its default value of false.
+            liveActivity.endAll()
+            return
         }
+        startOrRefreshLiveActivity(for: television)
+    }
+
+    private func refreshLiveActivityIfPresent() {
+        guard store.preferences.liveActivityEnabled, let television else { return }
+        refreshExistingLiveActivity(for: television)
     }
 
     private func refreshExistingLiveActivity(for television: SamsungTV) {
-        Task {
-            await liveActivity.update(
-                for: television, state: service.connectionState,
-                quickAction: store.preferences.dynamicIslandAction, launcherApps: liveActivityApps,
-                buttonTintHex: store.preferences.shortcutButtonColorHex
-            )
-        }
+        liveActivity.update(
+            for: television, state: service.connectionState,
+            quickAction: store.preferences.dynamicIslandAction, launcherApps: liveActivityApps,
+            buttonTintHex: store.preferences.shortcutButtonColorHex
+        )
     }
 
     /// ActivityKit state should stay small; 96 px is enough for the 27–32 pt launcher tiles.

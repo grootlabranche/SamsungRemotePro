@@ -43,7 +43,7 @@ struct RemoteActivityActionIntent: LiveActivityIntent {
                   let command = command(for: action) {
             let selectedName = await MainActor.run { store.selectedTelevision?.name }
             let matchingActivity = Activity<RemoteActivityAttributes>.activities.first(where: {
-                selectedName == nil || $0.attributes.televisionName == selectedName
+                selectedName == nil || $0.content.state.televisionName == selectedName
             })
             let currentlyPlaying = matchingActivity?.content.state.isPlaying ?? false
             let actualCommand: RemoteCommand

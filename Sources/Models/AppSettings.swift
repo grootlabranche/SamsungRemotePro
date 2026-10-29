@@ -16,13 +16,15 @@ struct RemotePreferences: Codable, Equatable {
     /// Kept for backwards compatibility with settings saved by earlier versions.
     var showExtraCommands = true
     var dynamicIslandAction: LiveActivityQuickAction = .playPause
+    /// Live Activities are opt-in. The remote remains fully functional when disabled.
+    var liveActivityEnabled = false
     var useHardwareVolumeButtons = false
     /// Hex RGB color used for remote shortcut button backgrounds.
     var shortcutButtonColorHex = "283447"
 
     private enum CodingKeys: String, CodingKey {
         case reconnectAutomatically, hapticsEnabled, navigationMode, showExtraCommands
-        case dynamicIslandAction, useHardwareVolumeButtons, shortcutButtonColorHex
+        case dynamicIslandAction, liveActivityEnabled, useHardwareVolumeButtons, shortcutButtonColorHex
     }
 
     init() {}
@@ -34,6 +36,7 @@ struct RemotePreferences: Codable, Equatable {
         navigationMode = try container.decodeIfPresent(NavigationMode.self, forKey: .navigationMode) ?? .gestures
         showExtraCommands = try container.decodeIfPresent(Bool.self, forKey: .showExtraCommands) ?? true
         dynamicIslandAction = try container.decodeIfPresent(LiveActivityQuickAction.self, forKey: .dynamicIslandAction) ?? .playPause
+        liveActivityEnabled = try container.decodeIfPresent(Bool.self, forKey: .liveActivityEnabled) ?? false
         useHardwareVolumeButtons = try container.decodeIfPresent(Bool.self, forKey: .useHardwareVolumeButtons) ?? false
         shortcutButtonColorHex = try container.decodeIfPresent(String.self, forKey: .shortcutButtonColorHex) ?? "283447"
     }

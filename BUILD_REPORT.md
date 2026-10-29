@@ -53,3 +53,18 @@
 - iOS ne fournit pas de notification fiable au moment précis où l’utilisateur force la fermeture de l’app. Une Live Activity peut donc rester affichée après un balayage forcé ; elle est réutilisée et rafraîchie à la prochaine ouverture.
 - Les logos sont sauvegardés dans le conteneur local de l’app. Une désinstallation complète peut les effacer ; ils ne peuvent pas être restaurés automatiquement après suppression sans sauvegarde/importation ou synchronisation cloud.
 - L’état Lecture/Pause reflète la dernière commande envoyée, pas une confirmation de lecture réelle provenant de la télévision.
+
+
+## Modifications de l’édition 1.2.4 – Live Activity configurable
+- Ajout de Réglages > Dynamic Island > « Activer la Live Activity », désactivé par défaut. Les anciennes préférences sont décodées avec cette option désactivée si la clé n’existe pas encore.
+- Lorsque l’option est activée, l’activité est créée à l’ouverture de l’écran télécommande et au retour au premier plan. Une activité déjà existante est actualisée/réutilisée ; les doublons détectés sont terminés immédiatement.
+- Quand l’option est désactivée, toutes les activités de ce type sont terminées avec la politique de suppression immédiate. La télécommande continue de fonctionner.
+- Les changements de connexion et de personnalisation actualisent uniquement une activité existante. Ils ne recréent donc pas spontanément une activité que l’utilisateur a balayée alors que l’app reste en arrière-plan.
+- Les opérations ActivityKit sont mises en file pour ordonner création, actualisation et fin. L’intent multimédia recherche le nom du téléviseur dans l’état affiché, ce qui reste valide si l’activité unique est réutilisée après un changement de TV.
+- Ajout de tests de modèle pour le défaut désactivé et la compatibilité avec les anciennes préférences. Version de l’app et de l’extension : 1.2.4 (build 6).
+
+## Vérifications de l’édition 1.2.4
+- Les fichiers Swift modifiés passent `swiftc -frontend -parse`.
+- Le projet Xcode `.pbxproj` et les fichiers plist passent `plutil -lint`. Le contenu de l’archive ZIP est aussi contrôlé par `unzip -t`.
+- Limite d’environnement : ce conteneur ne possède pas `xcodebuild` ni le SDK iOS. La compilation Apple réelle et les tests ActivityKit sur iPhone devront être confirmés par GitHub Actions puis sur appareil.
+- Limite iOS inchangée : iOS ne garantit pas un callback lorsque l’utilisateur force la fermeture de l’app. La Live Activity peut rester visible jusqu’à ce qu’iOS ou l’utilisateur la retire ; l’app ne la recrée pas spontanément pendant qu’elle reste fermée. À la prochaine ouverture, si l’option est activée, l’app réutilise l’activité existante ou en crée une seule si elle a été supprimée.

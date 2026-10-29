@@ -511,12 +511,15 @@ struct SettingsView: View {
                     .font(.footnote).foregroundStyle(.secondary)
             }
             Section("Dynamic Island") {
+                Toggle("Activer la Live Activity", isOn: $store.preferences.liveActivityEnabled)
+                Text("Désactivée par défaut. Lorsqu’elle est activée, la Live Activity apparaît à l’ouverture de l’application et reste disponible en arrière-plan. Si vous la supprimez manuellement, elle est recréée au prochain retour dans l’application. La désactivation termine l’activité sans désactiver la télécommande.")
+                    .font(.footnote).foregroundStyle(.secondary)
                 Picker("Action rapide", selection: $store.preferences.dynamicIslandAction) {
                     ForEach(LiveActivityQuickAction.allCases) { action in
                         Label(action.title, systemImage: action.systemImage).tag(action)
                     }
                 }
-                Text("La Live Activity démarre automatiquement lorsque la TV est connectée. Maintenez la Dynamic Island pour afficher l’action et jusqu’à cinq raccourcis d’applications.")
+                Text("Maintenez la Dynamic Island pour afficher l’action et jusqu’à cinq raccourcis d’applications. La présence d’une Live Activity dépend du réglage ci-dessus.")
                     .font(.footnote).foregroundStyle(.secondary)
             }
             Section("Boutons physiques de l’iPhone") {
@@ -532,7 +535,7 @@ struct SettingsView: View {
                 }
             }
             Section("À propos") {
-                LabeledContent("Version", value: "1.2.0")
+                LabeledContent("Version", value: "1.2.4")
                 Text("Les boutons d’action des Live Activities exécutent une LiveActivityIntent dans le processus de l’app sans afficher son interface. Toucher le fond de l’activité ouvre toujours la télécommande.")
                     .font(.footnote).foregroundStyle(.secondary)
             }
