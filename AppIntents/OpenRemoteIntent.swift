@@ -163,39 +163,39 @@ struct SendRemoteCommandIntent: AppIntent {
 /// Every additional direction/media/channel command remains selectable in the Shortcuts app
 /// through the single "Envoyer une commande à la TV Samsung" action above.
 struct SamsungRemoteAppShortcuts: AppShortcutsProvider {
+    @AppShortcutsBuilder
     static var appShortcuts: [AppShortcut] {
-        [
-            AppShortcut(intent: SendRemoteCommandIntent(action: .power),
-                        phrases: ["\(.applicationName) bascule l’alimentation de la télévision", "\(.applicationName) éteins ou allume la télé"],
-                        shortTitle: "Alimentation TV", systemImageName: "power"),
-            AppShortcut(intent: SendRemoteCommandIntent(action: .playPause),
-                        phrases: ["\(.applicationName) lecture ou pause sur la télévision", "\(.applicationName) mets la télé en pause"],
-                        shortTitle: "Lecture / pause", systemImageName: "playpause.fill"),
-            AppShortcut(intent: SendRemoteCommandIntent(action: .volumeUp),
-                        phrases: ["\(.applicationName) augmente le volume de la télévision"],
-                        shortTitle: "Volume +", systemImageName: "speaker.wave.2.fill"),
-            AppShortcut(intent: SendRemoteCommandIntent(action: .volumeDown),
-                        phrases: ["\(.applicationName) baisse le volume de la télévision"],
-                        shortTitle: "Volume −", systemImageName: "speaker.wave.1.fill"),
-            AppShortcut(intent: SendRemoteCommandIntent(action: .mute),
-                        phrases: ["\(.applicationName) coupe le son de la télévision"],
-                        shortTitle: "Sourdine", systemImageName: "speaker.slash.fill"),
-            AppShortcut(intent: SendRemoteCommandIntent(action: .home),
-                        phrases: ["\(.applicationName) ouvre l’accueil de la télévision"],
-                        shortTitle: "Accueil TV", systemImageName: "house.fill"),
-            AppShortcut(intent: SendRemoteCommandIntent(action: .back),
-                        phrases: ["\(.applicationName) retour sur la télévision"],
-                        shortTitle: "Retour TV", systemImageName: "arrow.uturn.backward"),
-            AppShortcut(intent: SendRemoteCommandIntent(action: .up),
-                        phrases: ["\(.applicationName) monte dans les menus de la télévision"],
-                        shortTitle: "Haut", systemImageName: "arrow.up"),
-            AppShortcut(intent: SendRemoteCommandIntent(action: .down),
-                        phrases: ["\(.applicationName) descend dans les menus de la télévision"],
-                        shortTitle: "Bas", systemImageName: "arrow.down"),
-            AppShortcut(intent: SendRemoteCommandIntent(action: .select),
-                        phrases: ["\(.applicationName) valide la sélection sur la télévision"],
-                        shortTitle: "Valider TV", systemImageName: "checkmark")
-        ]
+        AppShortcut(intent: SendRemoteCommandIntent(action: .power),
+                    phrases: ["\(.applicationName) bascule l’alimentation de la télévision", "\(.applicationName) éteins ou allume la télé"],
+                    shortTitle: "Alimentation TV", systemImageName: "power")
+        AppShortcut(intent: SendRemoteCommandIntent(action: .playPause),
+                    phrases: ["\(.applicationName) lecture ou pause sur la télévision", "\(.applicationName) mets la télé en pause"],
+                    shortTitle: "Lecture / pause", systemImageName: "playpause.fill")
+        AppShortcut(intent: SendRemoteCommandIntent(action: .volumeUp),
+                    phrases: ["\(.applicationName) augmente le volume de la télévision"],
+                    shortTitle: "Volume +", systemImageName: "speaker.wave.2.fill")
+        AppShortcut(intent: SendRemoteCommandIntent(action: .volumeDown),
+                    phrases: ["\(.applicationName) baisse le volume de la télévision"],
+                    shortTitle: "Volume −", systemImageName: "speaker.wave.1.fill")
+        AppShortcut(intent: SendRemoteCommandIntent(action: .mute),
+                    phrases: ["\(.applicationName) coupe le son de la télévision"],
+                    shortTitle: "Sourdine", systemImageName: "speaker.slash.fill")
+        AppShortcut(intent: SendRemoteCommandIntent(action: .home),
+                    phrases: ["\(.applicationName) ouvre l’accueil de la télévision"],
+                    shortTitle: "Accueil TV", systemImageName: "house.fill")
+        AppShortcut(intent: SendRemoteCommandIntent(action: .back),
+                    phrases: ["\(.applicationName) retour sur la télévision"],
+                    shortTitle: "Retour TV", systemImageName: "arrow.uturn.backward")
+        AppShortcut(intent: SendRemoteCommandIntent(action: .up),
+                    phrases: ["\(.applicationName) monte dans les menus de la télévision"],
+                    shortTitle: "Haut", systemImageName: "arrow.up")
+        AppShortcut(intent: SendRemoteCommandIntent(action: .down),
+                    phrases: ["\(.applicationName) descend dans les menus de la télévision"],
+                    shortTitle: "Bas", systemImageName: "arrow.down")
+        AppShortcut(intent: SendRemoteCommandIntent(action: .select),
+                    phrases: ["\(.applicationName) valide la sélection sur la télévision"],
+                    shortTitle: "Valider TV", systemImageName: "checkmark")
     }
 }
+
 #endif
