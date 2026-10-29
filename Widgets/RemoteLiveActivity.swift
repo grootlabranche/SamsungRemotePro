@@ -47,7 +47,7 @@ struct RemoteLiveActivityWidget: Widget {
         } dynamicIsland: { context in
             let action = context.state.quickAction ?? .playPause
             let apps = context.state.launcherApps ?? []
-            DynamicIsland {
+            return DynamicIsland {
                 DynamicIslandExpandedRegion(.leading) {
                     Image(systemName: "tv.fill").foregroundStyle(.blue)
                 }
