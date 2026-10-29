@@ -6,15 +6,28 @@ struct SamsungSocketEvent: Sendable {
     let raw: String
 }
 
-/// Deliberately uses URLSession's default TLS validation. No certificate exception is installed.
+/// Samsung local TVs may expose a self-signed certificate on their private IP.
+/// The delegate accepts that certificate only for private IPv4 endpoints.
 @MainActor
 final class SamsungWebSocketClient {
     private var task: URLSessionWebSocketTask?
     private let session: URLSession
+    private let trustDelegate: SamsungLocalNetworkTrustDelegate?
     var onEvent: ((SamsungSocketEvent) -> Void)?
     var onFailure: ((RemoteError) -> Void)?
 
-    init(session: URLSession = .shared) { self.session = session }
+    init(session: URLSession? = nil) {
+        if let session {
+            self.session = session
+            self.trustDelegate = nil
+        } else {
+            let configuration = URLSessionConfiguration.ephemeral
+            configuration.timeoutIntervalForRequest = 8
+            let delegate = SamsungLocalNetworkTrustDelegate()
+            self.trustDelegate = delegate
+            self.session = URLSession(configuration: configuration, delegate: delegate, delegateQueue: nil)
+        }
+    }
 
     func connect(to television: SamsungTV, token: String?) throws {
         disconnect()

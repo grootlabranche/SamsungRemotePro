@@ -96,3 +96,7 @@ Une vérification de l’appairage et des commandes exige un iPhone physique car
 - L'iPhone et la TV doivent être sur le même réseau, sans réseau invité ni isolation des clients Wi-Fi.
 - Pour une saisie manuelle, essayer d'abord le port 8001, puis activer le port 8002 si nécessaire.
 - Accepter la demande d'autorisation qui apparaît sur l'écran de la TV lors de la première connexion.
+
+
+## Découverte réseau (version expérimentale)
+La recherche combine SSDP et un scan IPv4 local `/24` avec validation de l’API Samsung. L’autorisation iOS Réseau local doit être accordée. Certains routeurs isolent les appareils Wi-Fi ou utilisent des VLAN, ce qui peut empêcher la découverte. Voir `BUILD_REPORT.md`.
