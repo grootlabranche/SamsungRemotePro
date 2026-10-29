@@ -10,12 +10,13 @@ Télécommande iOS native (SwiftUI) pour téléviseurs Samsung compatibles avec 
 - Pavé tactile à gestes, avec protection contre les déclenchements multiples, ou pavé directionnel accessible.
 - Découverte Bonjour/mDNS, vérification de l’API `/api/v2/` et scan IPv4 de repli, plus saisie manuelle d’adresse IP.
 - Réessais de connexion limités, délai de 12 s, diagnostic lisible et journalisation sans jeton ni mot de passe.
-- Demande de liste d’applications lorsqu’elle est exposée par la TV, et favoris manuels à partir d’un identifiant connu ; aucun identifiant n’est inventé.
+- Demande de liste d’applications lorsqu’elle est exposée par la TV, lecture des URL de logos si le firmware en renvoie, catalogue local de secours pour quelques services courants et favoris manuels à partir d’un identifiant connu ; aucun identifiant n’est inventé.
 - Saisie de texte par `SendInputString` Base64 (avec début/fin de session), uniquement si l’écran/l’application TV l’accepte.
 - Icône d’application issue du visuel fourni, intégrée à l’asset catalog iOS.
 - Interface principale réorganisée selon le visuel : Retour / Accueil / Applications, bascule de volume unique avec sourdine, puis Retour rapide / Lecture-pause / Avance rapide.
-- Live Activity démarrée automatiquement après connexion, avec choix de l’action rapide et jusqu’à cinq apps favorites. Un appui long ouvre la présentation développée iOS ; les cinq apps peuvent avoir un logo importé depuis Photos.
-- Widget petit/moyen conservé. Pour cette édition Sideloadly sans App Group, les liens de la Live Activity ouvrent brièvement l’app, qui envoie ensuite la commande avec sa session WebSocket et son jeton existants.
+- Live Activity démarrée automatiquement après connexion, avec choix de l’action rapide et jusqu’à cinq apps favorites. Les vrais boutons d’action utilisent `LiveActivityIntent` pour exécuter les commandes sans afficher l’interface ; toucher le fond de l’activité ouvre toujours l’app.
+- Réglages > Logos personnalisés des apps TV : chaque app détectée ou favorite peut recevoir une image importée depuis Photos, recadrée en carré avec coins arrondis, puis réutilisée dans la télécommande, la Dynamic Island et l’écran verrouillé.
+- Widget petit/moyen conservé. Pour préserver la signature Sideloadly, pas d’App Group requis : les logos sont conservés localement et les cinq logos favoris réduits sont sérialisés dans l’état ActivityKit envoyé au WidgetKit.
 - Option expérimentale pour traduire les changements du volume système en commandes de volume TV, uniquement quand l’app est au premier plan. iOS peut modifier aussi le volume de l’iPhone : les touches physiques ne sont pas exposées comme des événements directs aux apps tierces.
 - Tests unitaires, test d’intégration opt-in et scripts de compilation/archivage macOS.
 
@@ -58,7 +59,7 @@ La découverte Bonjour utilise le navigateur réseau intégré à iOS et déclar
 - Le volume peut être géré par une barre de son/amplificateur HDMI ARC plutôt que par la TV. Dans ce cas, les touches réseau TV peuvent n’avoir aucun effet.
 - Le réveil depuis veille complète n’est pas garanti. `KEY_POWER` ne peut être envoyé qu’à une TV déjà joignable ; Wake-on-LAN n’est pas implémenté car il exige une adresse MAC fiable et un réglage de veille réseau du téléviseur.
 - La liste complète des applications installées et les métadonnées de lecture ne sont pas exposées de façon fiable par ce protocole. Les favoris sont donc manuels. Aucun titre de streaming fictif n’est affiché sur l’écran verrouillé.
-- La Live Activity est démarrée automatiquement lorsque le canal TV est connecté, mais reste gérée par iOS et peut être arrêtée par le système. Elle ne maintient pas de connexion réseau indépendante. Les raccourcis de l’Île dynamique ouvrent l’app pour envoyer la commande, car cette édition ne partage pas le jeton/session réseau avec l’extension via App Groups.
+- La Live Activity est démarrée automatiquement lorsque le canal TV est connecté, mais reste gérée par iOS et peut être arrêtée par le système. Elle ne maintient pas de connexion WebSocket séparée. Les boutons `LiveActivityIntent` reconstruisent le service à partir du téléviseur enregistré et du jeton stocké dans le Trousseau; les boutons peuvent nécessiter le déverrouillage du téléphone.
 - Les boutons physiques de volume sont observés via `AVAudioSession.outputVolume`, pas interceptés directement. Cette fonction est volontairement opt-in et active seulement au premier plan ; elle peut également modifier le volume système de l’iPhone et ne détecte pas forcément les pressions quand le volume est déjà à sa limite.
 - La saisie de texte dépend du contexte IME fourni par la TV et peut être ignorée par certaines apps.
 - iOS ne donne pas à une app tierce un contrôle universel des contrôles multimédias de l’écran verrouillé d’une TV. Cette app ne détourne pas les API audio pour simuler ce comportement.

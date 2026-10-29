@@ -1,5 +1,6 @@
 import Combine
 import Foundation
+import UIKit
 
 @MainActor
 final class SamsungTVService: ObservableObject {
@@ -233,9 +234,64 @@ final class SamsungTVService: ObservableObject {
         }
         detectedApplications = apps.compactMap { item in
             guard let id = item["appId"] as? String, let name = item["name"] as? String else { return nil }
-            return RemoteApplication(id: id, name: name)
+            let iconURL = (item["icon"] as? String)
+                ?? (item["iconUrl"] as? String)
+                ?? (item["icon_url"] as? String)
+                ?? (item["iconPath"] as? String)
+                ?? (item["icon_path"] as? String)
+            return RemoteApplication(id: id, name: name, iconURL: iconURL)
         }
         lastDiagnostic = "\(detectedApplications.count) application(s) signalée(s) par le téléviseur."
+        if let television = connectedTV {
+            let appsForIcons = detectedApplications
+            Task { await fetchTVProvidedIcons(for: appsForIcons, television: television) }
+        }
+    }
+
+    private func fetchTVProvidedIcons(for apps: [RemoteApplication], television: SamsungTV) async {
+        for app in apps where store.logoData(for: app.id) == nil {
+            var didFetchTVIcon = false
+            if let rawIconURL = app.iconURL, !rawIconURL.isEmpty {
+                let baseURL = URL(string: "http://\(television.host):8001/")
+                if let url = URL(string: rawIconURL, relativeTo: baseURL)?.absoluteURL,
+                   ["http", "https"].contains(url.scheme?.lowercased() ?? "") {
+                    do {
+                        var request = URLRequest(url: url)
+                        request.timeoutInterval = 4
+                        let (data, response) = try await URLSession.shared.data(for: request)
+                        if let http = response as? HTTPURLResponse,
+                           (200..<300).contains(http.statusCode),
+                           let image = UIImage(data: data),
+                           let iconData = makeTVIconData(from: image) {
+                            store.setCustomIcon(iconData, for: app.id)
+                            didFetchTVIcon = true
+                        }
+                    } catch {
+                        AppLog.network.debug("Logo TV indisponible pour \(app.name, privacy: .public)")
+                    }
+                }
+            }
+
+            // Some Samsung firmware omits icon URLs; use an offline fallback for common apps.
+            if !didFetchTVIcon, let fallback = AppLogoCatalog.iconData(forAppName: app.name) {
+                store.setCustomIcon(fallback, for: app.id)
+            }
+        }
+    }
+
+    private func makeTVIconData(from image: UIImage) -> Data? {
+        let side: CGFloat = 256
+        let scale = max(side / max(image.size.width, 1), side / max(image.size.height, 1))
+        let scaled = CGSize(width: image.size.width * scale, height: image.size.height * scale)
+        let rect = CGRect(x: (side - scaled.width) / 2, y: (side - scaled.height) / 2, width: scaled.width, height: scaled.height)
+        let format = UIGraphicsImageRendererFormat()
+        format.scale = 1
+        format.opaque = false
+        let renderer = UIGraphicsImageRenderer(size: CGSize(width: side, height: side), format: format)
+        return renderer.image { context in
+            UIBezierPath(roundedRect: CGRect(x: 0, y: 0, width: side, height: side), cornerRadius: side * 0.22).addClip()
+            image.draw(in: rect)
+        }.pngData()
     }
 
     private func scheduleConnectionDeadline() {

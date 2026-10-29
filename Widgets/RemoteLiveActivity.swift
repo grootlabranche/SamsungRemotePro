@@ -17,18 +17,19 @@ struct RemoteLiveActivityWidget: Widget {
                         Text(context.state.connectionLabel).font(.caption).foregroundStyle(.secondary)
                     }
                     Spacer()
-                    Link(destination: actionURL(action)) {
+                    actionControl(action) {
                         Image(systemName: action.systemImage)
                             .font(.title3.weight(.semibold))
                             .frame(width: 40, height: 40)
                             .background(.white.opacity(0.10), in: Circle())
                     }
+                    .buttonStyle(.plain)
                     .accessibilityLabel(action.title)
                 }
                 if !apps.isEmpty {
                     HStack(spacing: 12) {
                         ForEach(apps.prefix(5)) { app in
-                            Link(destination: applicationURL(app)) {
+                            Button(intent: applicationIntent(app)) {
                                 VStack(spacing: 4) {
                                     LiveActivityAppIcon(app: app, size: 32)
                                     Text(app.name).font(.system(size: 10)).lineLimit(1).frame(maxWidth: 56)
@@ -58,16 +59,17 @@ struct RemoteLiveActivityWidget: Widget {
                     }
                 }
                 DynamicIslandExpandedRegion(.trailing) {
-                    Link(destination: actionURL(action)) {
+                    actionControl(action) {
                         Image(systemName: action.systemImage)
                             .font(.title3.weight(.semibold))
                             .frame(width: 36, height: 36)
                     }
+                    .buttonStyle(.plain)
                     .accessibilityLabel(action.title)
                 }
                 DynamicIslandExpandedRegion(.bottom) {
                     VStack(spacing: 10) {
-                        Link(destination: actionURL(action)) {
+                        actionControl(action) {
                             Label(action.title, systemImage: action.systemImage)
                                 .font(.subheadline.weight(.medium))
                                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -75,10 +77,11 @@ struct RemoteLiveActivityWidget: Widget {
                                 .padding(.vertical, 8)
                                 .background(.white.opacity(0.10), in: Capsule())
                         }
+                        .buttonStyle(.plain)
                         if !apps.isEmpty {
                             HStack(spacing: 8) {
                                 ForEach(apps.prefix(5)) { app in
-                                    Link(destination: applicationURL(app)) {
+                                    Button(intent: applicationIntent(app)) {
                                         VStack(spacing: 4) {
                                             LiveActivityAppIcon(app: app, size: 27)
                                             Text(app.name)
@@ -102,29 +105,39 @@ struct RemoteLiveActivityWidget: Widget {
             } compactLeading: {
                 Image(systemName: "tv.fill")
             } compactTrailing: {
-                Image(systemName: action.systemImage)
+                actionControl(action) {
+                    Image(systemName: action.systemImage)
+                }
+                .buttonStyle(.plain)
             } minimal: {
-                Image(systemName: "tv")
+                actionControl(action) {
+                    Image(systemName: "tv")
+                }
+                .buttonStyle(.plain)
             }
             .widgetURL(URL(string: "samsungremotepro://remote"))
             .keylineTint(.blue)
         }
     }
 
-    private func actionURL(_ action: LiveActivityQuickAction) -> URL {
-        var components = URLComponents()
-        components.scheme = "samsungremotepro"
-        components.host = "remote"
-        components.queryItems = [URLQueryItem(name: "action", value: action.rawValue)]
-        return components.url ?? URL(string: "samsungremotepro://remote")!
+    @ViewBuilder
+    private func actionControl<Label: View>(
+        _ action: LiveActivityQuickAction,
+        @ViewBuilder label: () -> Label
+    ) -> some View {
+        if action == .openRemote {
+            Button(intent: OpenRemoteIntent(), label: label)
+        } else {
+            Button(intent: actionIntent(action), label: label)
+        }
     }
 
-    private func applicationURL(_ app: LiveActivityApp) -> URL {
-        var components = URLComponents()
-        components.scheme = "samsungremotepro"
-        components.host = "remote"
-        components.queryItems = [URLQueryItem(name: "launchApp", value: app.id)]
-        return components.url ?? URL(string: "samsungremotepro://remote")!
+    private func actionIntent(_ action: LiveActivityQuickAction) -> RemoteActivityActionIntent {
+        RemoteActivityActionIntent(actionRawValue: action.rawValue)
+    }
+
+    private func applicationIntent(_ app: LiveActivityApp) -> RemoteActivityActionIntent {
+        RemoteActivityActionIntent(actionRawValue: "launchApplication", appID: app.id)
     }
 }
 

@@ -14,6 +14,7 @@ struct ApplicationsView: View {
     @State private var selectedIconItem: PhotosPickerItem?
     @State private var selectedIconAppID: String?
     @State private var showingLimitAlert = false
+    @State private var cropRequest: LogoCropRequest?
 
     private let maximumLauncherApps = 5
 
@@ -33,7 +34,7 @@ struct ApplicationsView: View {
                 Section("Détectées par le téléviseur") {
                     ForEach(service.detectedApplications) { app in
                         HStack(spacing: 12) {
-                            AppIconView(data: favoriteVersion(of: app)?.customIconData, size: 38)
+                            AppIconView(data: store.logoData(for: app.id), size: 38)
                             VStack(alignment: .leading, spacing: 3) {
                                 Text(app.name)
                                 Text(app.id).font(.caption2).foregroundStyle(.secondary).lineLimit(1)
@@ -76,7 +77,7 @@ struct ApplicationsView: View {
                                 dismiss()
                             } label: {
                                 HStack(spacing: 12) {
-                                    AppIconView(data: app.customIconData, size: 42)
+                                    AppIconView(data: store.logoData(for: app.id), size: 42)
                                     VStack(alignment: .leading, spacing: 3) {
                                         Text(app.name).foregroundStyle(.primary)
                                         Text(app.id).font(.caption2).foregroundStyle(.secondary).lineLimit(1)
@@ -114,7 +115,15 @@ struct ApplicationsView: View {
         .task { await service.refreshInstalledApplications() }
         .onChange(of: selectedIconItem) { _, item in
             guard let item, let targetID = selectedIconAppID else { return }
-            Task { await importIcon(from: item, for: targetID) }
+            Task { await prepareCrop(from: item, for: targetID) }
+        }
+        .sheet(item: $cropRequest) { request in
+            LogoCropView(image: request.image, appName: request.appName) { iconData in
+                store.setCustomIcon(iconData, for: request.appID)
+                cropRequest = nil
+            } onCancel: {
+                cropRequest = nil
+            }
         }
         .toolbar {
             ToolbarItem(placement: .topBarLeading) { Button("Fermer") { dismiss() } }
@@ -142,10 +151,6 @@ struct ApplicationsView: View {
         .sheet(isPresented: $showingTextInput) { TextInputView() }
     }
 
-    private func favoriteVersion(of app: RemoteApplication) -> RemoteApplication? {
-        store.favoriteApps.first { $0.id == app.id }
-    }
-
     private func addDetectedApp(_ app: RemoteApplication) {
         guard store.favoriteApps.count < maximumLauncherApps else {
             showingLimitAlert = true
@@ -153,6 +158,7 @@ struct ApplicationsView: View {
         }
         var favorite = app
         favorite.isFavorite = true
+        favorite.customIconData = store.logoData(for: app.id)
         store.favoriteApps.append(favorite)
     }
 
@@ -166,30 +172,14 @@ struct ApplicationsView: View {
         )
     }
 
-    private func importIcon(from item: PhotosPickerItem, for appID: String) async {
+    private func prepareCrop(from item: PhotosPickerItem, for appID: String) async {
         guard let sourceData = try? await item.loadTransferable(type: Data.self),
-              let image = UIImage(data: sourceData),
-              let compactData = compactLogoData(from: image),
-              let index = store.favoriteApps.firstIndex(where: { $0.id == appID }) else { return }
-        store.favoriteApps[index].customIconData = compactData
+              let image = UIImage(data: sourceData) else { return }
+        let appName = store.favoriteApps.first(where: { $0.id == appID })?.name
+            ?? service.detectedApplications.first(where: { $0.id == appID })?.name
+            ?? appID
+        cropRequest = LogoCropRequest(appID: appID, appName: appName, image: image)
         selectedIconItem = nil
-    }
-
-    /// Downsample icons before saving and mirroring them into the Live Activity state.
-    private func compactLogoData(from image: UIImage) -> Data? {
-        let size = CGSize(width: 72, height: 72)
-        UIGraphicsBeginImageContextWithOptions(size, true, 1)
-        defer { UIGraphicsEndImageContext() }
-        UIColor.black.setFill()
-        UIRectFill(CGRect(origin: .zero, size: size))
-
-        let sourceSize = image.size
-        guard sourceSize.width > 0, sourceSize.height > 0 else { return nil }
-        let scale = max(size.width / sourceSize.width, size.height / sourceSize.height)
-        let scaled = CGSize(width: sourceSize.width * scale, height: sourceSize.height * scale)
-        let origin = CGPoint(x: (size.width - scaled.width) / 2, y: (size.height - scaled.height) / 2)
-        image.draw(in: CGRect(origin: origin, size: scaled))
-        return UIGraphicsGetImageFromCurrentImageContext()?.jpegData(compressionQuality: 0.48)
     }
 
     private func addFavorite() {
@@ -228,6 +218,241 @@ struct AppIconView: View {
         .clipShape(RoundedRectangle(cornerRadius: size * 0.23, style: .continuous))
         .background(.white.opacity(0.08), in: RoundedRectangle(cornerRadius: size * 0.23, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: size * 0.23, style: .continuous).stroke(.white.opacity(0.10), lineWidth: 1))
+    }
+}
+
+private struct LogoCropRequest: Identifiable {
+    let id = UUID()
+    let appID: String
+    let appName: String
+    let image: UIImage
+}
+
+struct AppLogoCustomizationView: View {
+    @EnvironmentObject private var store: TVStore
+    @EnvironmentObject private var service: SamsungTVService
+    @State private var selectedPhoto: PhotosPickerItem?
+    @State private var selectedAppID: String?
+    @State private var cropRequest: LogoCropRequest?
+    @State private var showingNoAppsAlert = false
+
+    private var apps: [RemoteApplication] {
+        var result = service.detectedApplications
+        var seen = Set(result.map(\.id))
+        for app in store.favoriteApps where !seen.contains(app.id) {
+            result.append(app)
+            seen.insert(app.id)
+        }
+        return result.sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+    }
+
+    var body: some View {
+        List {
+            Section {
+                Text("Sélectionnez une photo ou un logo, puis déplacez et zoomez l’image dans le cadre carré. Le résultat est enregistré pour cette application et réutilisé dans la télécommande et la Dynamic Island.")
+                    .font(.footnote).foregroundStyle(.secondary)
+                Button {
+                    Task { await service.refreshInstalledApplications() }
+                    if apps.isEmpty { showingNoAppsAlert = true }
+                } label: {
+                    Label("Actualiser les apps détectées", systemImage: "arrow.clockwise")
+                }
+            }
+
+            if apps.isEmpty {
+                ContentUnavailableView(
+                    "Aucune application trouvée",
+                    systemImage: "app.badge",
+                    description: Text("Connectez la TV, ouvrez Applications pour demander sa liste, ou ajoutez d’abord un raccourci personnalisé.")
+                )
+            } else {
+                Section("Applications du téléviseur") {
+                    ForEach(apps) { app in
+                        HStack(spacing: 12) {
+                            AppIconView(data: store.logoData(for: app.id), size: 48)
+                            VStack(alignment: .leading, spacing: 3) {
+                                Text(app.name)
+                                Text(app.id).font(.caption2).foregroundStyle(.secondary).lineLimit(1)
+                                if store.logoData(for: app.id) != nil {
+                                    Text("Logo personnalisé enregistré").font(.caption2).foregroundStyle(.green)
+                                }
+                            }
+                            Spacer(minLength: 6)
+                            PhotosPicker(selection: photoBinding(for: app), matching: .images) {
+                                Image(systemName: "photo.badge.plus")
+                                    .font(.title3)
+                                    .frame(width: 40, height: 40)
+                                    .contentShape(Rectangle())
+                            }
+                            .accessibilityLabel("Choisir et recadrer le logo de \(app.name)")
+                            if store.logoData(for: app.id) != nil {
+                                Button(role: .destructive) {
+                                    store.setCustomIcon(nil, for: app.id)
+                                } label: {
+                                    Image(systemName: "trash")
+                                }
+                                .accessibilityLabel("Supprimer le logo personnalisé de \(app.name)")
+                            }
+                        }
+                        .padding(.vertical, 3)
+                    }
+                }
+            }
+        }
+        .navigationTitle("Logos des apps TV")
+        .navigationBarTitleDisplayMode(.inline)
+        .task { await service.refreshInstalledApplications() }
+        .onChange(of: selectedPhoto) { _, item in
+            guard let item, let appID = selectedAppID else { return }
+            Task { await loadPhoto(item, appID: appID) }
+        }
+        .sheet(item: $cropRequest) { request in
+            LogoCropView(image: request.image, appName: request.appName) { iconData in
+                store.setCustomIcon(iconData, for: request.appID)
+                cropRequest = nil
+            } onCancel: {
+                cropRequest = nil
+            }
+        }
+        .alert("Aucune app détectée pour le moment", isPresented: $showingNoAppsAlert) {
+            Button("OK", role: .cancel) { }
+        } message: {
+            Text("La TV doit être connectée. Certaines versions de Tizen ne renvoient pas la liste des applications; les favoris déjà enregistrés restent modifiables.")
+        }
+    }
+
+    private func photoBinding(for app: RemoteApplication) -> Binding<PhotosPickerItem?> {
+        Binding(get: { selectedAppID == app.id ? selectedPhoto : nil }, set: { item in
+            selectedAppID = app.id
+            selectedPhoto = item
+        })
+    }
+
+    private func loadPhoto(_ item: PhotosPickerItem, appID: String) async {
+        guard let data = try? await item.loadTransferable(type: Data.self),
+              let image = UIImage(data: data) else { return }
+        let appName = apps.first(where: { $0.id == appID })?.name ?? appID
+        cropRequest = LogoCropRequest(appID: appID, appName: appName, image: image)
+        selectedPhoto = nil
+    }
+}
+
+/// Square cropper with pan and zoom. Saved images are 256px PNGs with transparent rounded corners.
+struct LogoCropView: View {
+    let image: UIImage
+    let appName: String
+    let onSave: (Data) -> Void
+    let onCancel: () -> Void
+
+    @State private var zoom: CGFloat = 1
+    @State private var offset: CGSize = .zero
+    @GestureState private var dragTranslation: CGSize = .zero
+
+    var body: some View {
+        NavigationStack {
+            GeometryReader { geometry in
+                let side = min(geometry.size.width - 40, 320)
+                let scale = max(side / max(image.size.width, 1), side / max(image.size.height, 1)) * zoom
+                let displayWidth = image.size.width * scale
+                let displayHeight = image.size.height * scale
+                let currentOffset = clampOffset(
+                    CGSize(width: offset.width + dragTranslation.width, height: offset.height + dragTranslation.height),
+                    side: side,
+                    displayWidth: displayWidth,
+                    displayHeight: displayHeight
+                )
+
+                VStack(spacing: 22) {
+                    Spacer(minLength: 12)
+                    ZStack {
+                        RoundedRectangle(cornerRadius: side * 0.20, style: .continuous)
+                            .fill(Color.white.opacity(0.08))
+                        Image(uiImage: image)
+                            .resizable()
+                            .frame(width: displayWidth, height: displayHeight)
+                            .offset(x: currentOffset.width, y: currentOffset.height)
+                    }
+                    .frame(width: side, height: side)
+                    .clipShape(RoundedRectangle(cornerRadius: side * 0.20, style: .continuous))
+                    .overlay {
+                        RoundedRectangle(cornerRadius: side * 0.20, style: .continuous)
+                            .stroke(.white.opacity(0.35), lineWidth: 1)
+                    }
+                    .gesture(
+                        DragGesture()
+                            .updating($dragTranslation) { value, state, _ in state = value.translation }
+                            .onEnded { value in
+                                offset = clampOffset(
+                                    CGSize(width: offset.width + value.translation.width, height: offset.height + value.translation.height),
+                                    side: side,
+                                    displayWidth: displayWidth,
+                                    displayHeight: displayHeight
+                                )
+                            }
+                    )
+                    Text("Faites glisser pour recadrer")
+                        .font(.subheadline).foregroundStyle(.secondary)
+                    VStack(spacing: 8) {
+                        HStack {
+                            Label("Zoom", systemImage: "plus.magnifyingglass")
+                            Spacer()
+                            Text("\(Int(zoom * 100)) %").monospacedDigit().foregroundStyle(.secondary)
+                        }
+                        Slider(value: $zoom, in: 1...3, step: 0.05)
+                            .onChange(of: zoom) { _, _ in
+                                let newScale = max(side / max(image.size.width, 1), side / max(image.size.height, 1)) * zoom
+                                offset = clampOffset(offset, side: side, displayWidth: image.size.width * newScale, displayHeight: image.size.height * newScale)
+                            }
+                    }
+                    .frame(width: side)
+                    Spacer(minLength: 12)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .padding(.top, 12)
+            }
+            .background(Color.black.ignoresSafeArea())
+            .navigationTitle("Recadrer le logo")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) { Button("Annuler", action: onCancel) }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Enregistrer") {
+                        if let data = makeRoundedIconData(side: 256) { onSave(data) }
+                    }
+                }
+            }
+            .preferredColorScheme(.dark)
+        }
+    }
+
+    private func clampOffset(_ candidate: CGSize, side: CGFloat, displayWidth: CGFloat, displayHeight: CGFloat) -> CGSize {
+        let limitX = max(0, (displayWidth - side) / 2)
+        let limitY = max(0, (displayHeight - side) / 2)
+        return CGSize(width: min(max(candidate.width, -limitX), limitX), height: min(max(candidate.height, -limitY), limitY))
+    }
+
+    private func makeRoundedIconData(side outputSide: CGFloat) -> Data? {
+        let side: CGFloat = 320
+        let scale = max(side / max(image.size.width, 1), side / max(image.size.height, 1)) * zoom
+        let displayWidth = image.size.width * scale
+        let displayHeight = image.size.height * scale
+        let finalOffset = clampOffset(offset, side: side, displayWidth: displayWidth, displayHeight: displayHeight)
+        let sourceSide = side / scale
+        let originX = (image.size.width - sourceSide) / 2 - finalOffset.width / scale
+        let originY = (image.size.height - sourceSide) / 2 - finalOffset.height / scale
+        let targetRect = CGRect(x: max(0, min(image.size.width-sourceSide, originX)), y: max(0, min(image.size.height-sourceSide, originY)), width: min(sourceSide, image.size.width), height: min(sourceSide, image.size.height))
+        let outputSize = CGSize(width: outputSide, height: outputSide)
+        let format = UIGraphicsImageRendererFormat()
+        format.scale = 1
+        format.opaque = false
+        let renderer = UIGraphicsImageRenderer(size: outputSize, format: format)
+        let rendered = renderer.image { context in
+            let path = UIBezierPath(roundedRect: CGRect(origin: .zero, size: outputSize), cornerRadius: outputSide * 0.22)
+            path.addClip()
+            let factor = outputSide / targetRect.width
+            image.draw(in: CGRect(x: -targetRect.origin.x * factor, y: -targetRect.origin.y * factor, width: image.size.width * factor, height: image.size.height * factor))
+        }
+        return rendered.pngData()
     }
 }
 
@@ -272,6 +497,15 @@ struct SettingsView: View {
                 Toggle("Retour haptique", isOn: $store.preferences.hapticsEnabled)
                 Toggle("Reconnexion automatique", isOn: $store.preferences.reconnectAutomatically)
             }
+            Section("Personnalisation") {
+                NavigationLink {
+                    AppLogoCustomizationView()
+                } label: {
+                    Label("Logos personnalisés des apps TV", systemImage: "app.badge")
+                }
+                Text("Choisissez une image pour chaque application détectée ou favorite, recadrez-la et réutilisez-la dans la télécommande et la Dynamic Island.")
+                    .font(.footnote).foregroundStyle(.secondary)
+            }
             Section("Dynamic Island") {
                 Picker("Action rapide", selection: $store.preferences.dynamicIslandAction) {
                     ForEach(LiveActivityQuickAction.allCases) { action in
@@ -294,8 +528,8 @@ struct SettingsView: View {
                 }
             }
             Section("À propos") {
-                LabeledContent("Version", value: "1.1.0")
-                Text("Les commandes réseau et le contrôle TV restent locaux. Les raccourcis de la Dynamic Island ouvrent l’application pour envoyer la commande avec la session WebSocket enregistrée.")
+                LabeledContent("Version", value: "1.1.2")
+                Text("Les boutons d’action des Live Activities exécutent une LiveActivityIntent dans le processus de l’app sans afficher son interface. Toucher le fond de l’activité ouvre toujours la télécommande.")
                     .font(.footnote).foregroundStyle(.secondary)
             }
         }
