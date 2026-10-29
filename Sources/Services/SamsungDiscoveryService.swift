@@ -128,10 +128,13 @@ final class SamsungDiscoveryService {
             guard let addr = item.pointee.ifa_addr, addr.pointee.sa_family == UInt8(AF_INET),
                   let name = item.pointee.ifa_name.map({ String(cString: $0) }), name == "en0" else { continue }
             let address = addr.withMemoryRebound(to: sockaddr_in.self, capacity: 1) { $0.pointee.sin_addr.s_addr }
-            let ip = address.withUnsafeBytes { bytes -> String? in
-                guard let base = bytes.baseAddress else { return nil }
-                var buffer = [CChar](repeating: 0, count: Int(INET_ADDRSTRLEN))
-                return inet_ntop(AF_INET, base, &buffer, socklen_t(INET_ADDRSTRLEN)).map { _ in String(cString: buffer) }
+            var addressValue = address
+            var buffer = [CChar](repeating: 0, count: Int(INET_ADDRSTRLEN))
+            let ip = withUnsafePointer(to: &addressValue) { addressPointer -> String? in
+                guard inet_ntop(AF_INET, addressPointer, &buffer, socklen_t(INET_ADDRSTRLEN)) != nil else {
+                    return nil
+                }
+                return String(cString: buffer)
             }
             guard let ip, isPrivateIPv4(ip), let octets = ip.split(separator: ".").compactMap({ Int($0) }), octets.count == 4 else { continue }
             // /24 is a practical fallback; skip own address and network/broadcast.
