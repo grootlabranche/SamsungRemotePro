@@ -44,7 +44,6 @@ jobs:
             -project "SamsungRemotePro.xcodeproj" \
             -scheme "SamsungRemotePro" \
             -configuration Release \
-            -sdk iphoneos \
             -destination 'generic/platform=iOS' \
             -archivePath "$RUNNER_TEMP/SamsungRemotePro.xcarchive" \
             CODE_SIGNING_ALLOWED=NO \
