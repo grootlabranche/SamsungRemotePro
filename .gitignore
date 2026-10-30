@@ -1,0 +1,26 @@
+# Xcode / Swift
+.DS_Store
+DerivedData/
+build/
+*.xcuserstate
+xcuserdata/
+*.xccheckout
+*.moved-aside
+*.hmap
+*.ipa
+*.xcarchive/
+*.dSYM
+*.dSYM.zip
+
+# Local secrets and machine-specific configuration
+.env
+.env.*
+!.env.example
+*.mobileprovision
+*.p12
+*.cer
+AuthKey_*.p8
+
+# Editors
+.vscode/
+.idea/
