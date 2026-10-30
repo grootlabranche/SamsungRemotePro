@@ -15,14 +15,13 @@ permissions:
 jobs:
   build:
     name: IPA iPhone non signée
-    # Runner macOS Intel standard, afin d’éviter les runners "large".
     runs-on: macos-26-intel
 
     steps:
       - name: Récupérer le dépôt
         uses: actions/checkout@v6
 
-      - name: Vérifier l’environnement Apple
+      - name: Vérifier l’environnement Apple et les fichiers de configuration
         shell: bash
         run: |
           set -euo pipefail
@@ -32,6 +31,7 @@ jobs:
             echo "::error::SamsungRemotePro.xcodeproj doit être à la racine du dépôt."
             exit 1
           }
+          plutil -lint Config/Info.plist Config/WidgetInfo.plist WatchApp/Info.plist
 
       - name: Vérifier le schéma partagé
         shell: bash
@@ -54,7 +54,7 @@ jobs:
             CODE_SIGN_IDENTITY="" \
             | tee "$RUNNER_TEMP/xcodebuild-archive.log"
 
-      - name: Créer l’IPA non signée
+      - name: Créer et vérifier l’IPA non signée
         shell: bash
         run: |
           set -euo pipefail
@@ -72,7 +72,13 @@ jobs:
           ditto "$APP" "$IPA_DIR/Payload/SamsungRemotePro.app"
           (cd "$IPA_DIR" && /usr/bin/zip -qry "$IPA" Payload)
           test -s "$IPA"
-          /usr/bin/unzip -l "$IPA" | head -n 30
+
+          # Validate the archive before publishing it. Write command output to files
+          # before previewing it, so pipefail cannot turn a successful unzip into a failure.
+          /usr/bin/unzip -t "$IPA" > "$RUNNER_TEMP/ipa-validation.txt"
+          /usr/bin/unzip -l "$IPA" > "$RUNNER_TEMP/ipa-contents.txt"
+          tail -n 2 "$RUNNER_TEMP/ipa-validation.txt"
+          head -n 30 "$RUNNER_TEMP/ipa-contents.txt"
           ls -lh "$IPA"
 
       - name: Publier l’IPA à télécharger
