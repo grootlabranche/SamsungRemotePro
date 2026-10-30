@@ -136,7 +136,7 @@
 		T001 = {isa = PBXNativeTarget; buildConfigurationList = CL01; buildPhases = (PHS1, PHR1, PHF1, PHE1, PHE2, ); buildRules = (); dependencies = (TD01, TD03, ); name = SamsungRemotePro; productName = SamsungRemotePro; productReference = F035; productType = "com.apple.product-type.application"; };
 		T002 = {isa = PBXNativeTarget; buildConfigurationList = CL02; buildPhases = (PHS2, PHF2, ); buildRules = (); dependencies = (); name = SamsungRemoteProWidgets; productName = SamsungRemoteProWidgets; productReference = F036; productType = "com.apple.product-type.app-extension"; };
 		T003 = {isa = PBXNativeTarget; buildConfigurationList = CL03; buildPhases = (PHS3, PHF3, ); buildRules = (); dependencies = (TD02, ); name = SamsungRemoteProTests; productName = SamsungRemoteProTests; productReference = F037; productType = "com.apple.product-type.bundle.unit-test"; };
-		T004 = {isa = PBXNativeTarget; buildConfigurationList = CL04; buildPhases = (PHS4, PHF4, ); buildRules = (); dependencies = (); name = SamsungRemoteProWatch; productName = SamsungRemoteProWatch; productReference = F041; productType = "com.apple.product-type.application.watchapp2"; };
+		T004 = {isa = PBXNativeTarget; buildConfigurationList = CL04; buildPhases = (PHS4, PHF4, ); buildRules = (); dependencies = (); name = SamsungRemoteProWatch; productName = SamsungRemoteProWatch; productReference = F041; productType = "com.apple.product-type.application"; };
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
