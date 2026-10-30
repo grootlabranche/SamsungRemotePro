@@ -185,16 +185,17 @@ SamsungRemotePro/
 
 ## Builds et releases
 
-Le workflow **Build iOS IPA** est conçu pour :
-1. récupérer le code ;
-2. vérifier la configuration et la syntaxe ;
-3. archiver l’application iOS sur un runner macOS ;
-4. produire une IPA non signée avec Payload/SamsungRemotePro.app ;
-5. vérifier le ZIP ;
-6. publier l’IPA comme artefact de build ;
-7. pour un tag de version commençant par v, joindre l’IPA à une release GitHub après réussite du build.
+Le workflow **Build iOS IPA** :
+1. se lance sur chaque push vers `main`, sur demande manuelle et sur les pull requests ;
+2. vérifie la configuration et la syntaxe ;
+3. lit `MARKETING_VERSION` depuis les réglages Xcode du code présent dans Git ;
+4. archive l’application iOS, crée l’IPA non signée et vérifie son intégrité ;
+5. publie l’IPA comme artefact de build ;
+6. après réussite, pour un push sur `main` ou un lancement manuel, crée ou met à jour automatiquement la release `v<MARKETING_VERSION>` et y attache l’IPA. Les pull requests ne publient pas de release.
 
-Une release n’est valide que si le workflow a terminé avec succès et que la page Releases contient l’IPA. Ne publiez pas un build rouge comme version stable.
+**Version de release :** la source de vérité est `MARKETING_VERSION` dans la configuration Xcode, pas un numéro écrit en dur dans le workflow. Si plusieurs builds réussis utilisent la même version, la release `vX.Y.Z` existante est mise à jour avec le nouvel IPA. Pour créer une nouvelle release distincte, incrémentez `MARKETING_VERSION` avant le build.
+
+Une release n’est publiée qu’après la réussite du build et la création/validation de l’IPA. L’IPA est non signée et doit être signée avant installation sur iPhone.
 
 ## Dépannage
 
