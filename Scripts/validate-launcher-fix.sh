@@ -55,6 +55,7 @@ for bundle_id in (
     )
 assert re.search(r"MARKETING_VERSION\s*=\s*[^;]+;", project), "Missing marketing version"
 assert re.search(r"CURRENT_PROJECT_VERSION\s*=\s*[^;]+;", project), "Missing build number"
+assert 'PHE2 = {isa = PBXCopyFilesBuildPhase; buildActionMask = 2147483647; dstPath = ""; dstSubfolderSpec = 13; files = (B045, ); name = "Embed Watch Content";' in project, "Xcode 26 requires the single-target Watch app to be embedded in PlugIns"
 
 # Keep existing launcher safeguards covered by the static validation.
 assert "3500" in (root / "Sources/Services/LiveActivityManager.swift").read_text()

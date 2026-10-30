@@ -156,7 +156,7 @@
 
 /* Begin PBXCopyFilesBuildPhase section */
 		PHE1 = {isa = PBXCopyFilesBuildPhase; buildActionMask = 2147483647; dstPath = ""; dstSubfolderSpec = 13; files = (B038, ); name = "Embed App Extensions"; runOnlyForDeploymentPostprocessing = 0; };
-		PHE2 = {isa = PBXCopyFilesBuildPhase; buildActionMask = 2147483647; dstPath = ""; dstSubfolderSpec = 16; files = (B045, ); name = "Embed Watch Content"; runOnlyForDeploymentPostprocessing = 0; };
+		PHE2 = {isa = PBXCopyFilesBuildPhase; buildActionMask = 2147483647; dstPath = ""; dstSubfolderSpec = 13; files = (B045, ); name = "Embed Watch Content"; runOnlyForDeploymentPostprocessing = 0; };
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
