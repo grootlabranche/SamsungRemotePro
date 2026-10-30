@@ -1,94 +1,83 @@
-name: Construire l’IPA Sideloadly
+name: Build iOS IPA
 
 on:
   workflow_dispatch:
   push:
-    branches:
-      - main
+    branches: [main]
+    tags: ["v*"]
   pull_request:
-    branches:
-      - main
+    branches: [main]
 
 permissions:
   contents: read
 
 jobs:
   build:
-    name: IPA iPhone non signée
-    runs-on: macos-26-intel
-
+    name: Validate and package iOS IPA
+    runs-on: macos-26
     steps:
-      - name: Récupérer le dépôt
+      - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Vérifier l’environnement Apple et les fichiers de configuration
+      - name: Check Xcode and project configuration
         shell: bash
         run: |
           set -euo pipefail
           xcodebuild -version
-          echo "Architecture du runner : $(uname -m)"
-          test -d "SamsungRemotePro.xcodeproj" || {
-            echo "::error::SamsungRemotePro.xcodeproj doit être à la racine du dépôt."
-            exit 1
-          }
-          plutil -lint Config/Info.plist Config/WidgetInfo.plist WatchApp/Info.plist
+          plutil -lint Config/Info.plist Config/WidgetInfo.plist
+          test -d SamsungRemotePro.xcodeproj
 
-      - name: Vérifier la syntaxe Swift et les invariants du projet
+      - name: Validate Swift syntax and iOS project invariants
         shell: bash
         run: bash Scripts/validate-launcher-fix.sh
 
-      - name: Vérifier le schéma partagé
-        shell: bash
-        run: |
-          set -euo pipefail
-          xcodebuild -list -project "SamsungRemotePro.xcodeproj"
+      - name: List schemes
+        run: xcodebuild -list -project SamsungRemotePro.xcodeproj
 
-      - name: Compiler et archiver sans signature
+      - name: Archive iOS app without signing
         shell: bash
         run: |
-          set -euo pipefail
+          set -o pipefail
           xcodebuild archive \
-            -project "SamsungRemotePro.xcodeproj" \
-            -scheme "SamsungRemotePro" \
+            -project SamsungRemotePro.xcodeproj \
+            -scheme SamsungRemotePro \
             -configuration Release \
             -destination 'generic/platform=iOS' \
             -archivePath "$RUNNER_TEMP/SamsungRemotePro.xcarchive" \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGN_IDENTITY="" \
-            | tee "$RUNNER_TEMP/xcodebuild-archive.log"
+            2>&1 | tee "$RUNNER_TEMP/xcodebuild-archive.log"
 
-      - name: Créer et vérifier l’IPA non signée
+      - name: Package and validate IPA
         shell: bash
         run: |
           set -euo pipefail
           APP="$RUNNER_TEMP/SamsungRemotePro.xcarchive/Products/Applications/SamsungRemotePro.app"
-          IPA_DIR="$RUNNER_TEMP/ipa"
           IPA="$GITHUB_WORKSPACE/SamsungRemotePro-unsigned.ipa"
-
-          if [ ! -d "$APP" ]; then
-            echo "::error::Application introuvable dans l’archive : $APP"
-            find "$RUNNER_TEMP/SamsungRemotePro.xcarchive/Products/Applications" -maxdepth 3 -print 2>/dev/null || true
-            exit 1
-          fi
-
-          mkdir -p "$IPA_DIR/Payload"
-          ditto "$APP" "$IPA_DIR/Payload/SamsungRemotePro.app"
-          (cd "$IPA_DIR" && /usr/bin/zip -qry "$IPA" Payload)
+          STAGING="$RUNNER_TEMP/ipa-staging"
+          test -d "$APP" || { echo "::error::Archived iOS app not found"; exit 1; }
+          mkdir -p "$STAGING/Payload"
+          ditto "$APP" "$STAGING/Payload/SamsungRemotePro.app"
+          (cd "$STAGING" && /usr/bin/zip -qry "$IPA" Payload)
           test -s "$IPA"
-
-          # Validate the archive before publishing it. Write command output to files
-          # before previewing it, so pipefail cannot turn a successful unzip into a failure.
           /usr/bin/unzip -t "$IPA" > "$RUNNER_TEMP/ipa-validation.txt"
-          /usr/bin/unzip -l "$IPA" > "$RUNNER_TEMP/ipa-contents.txt"
           tail -n 2 "$RUNNER_TEMP/ipa-validation.txt"
-          head -n 30 "$RUNNER_TEMP/ipa-contents.txt"
           ls -lh "$IPA"
 
-      - name: Publier l’IPA à télécharger
+      - name: Upload IPA build artifact
         uses: actions/upload-artifact@v4
         with:
           name: SamsungRemotePro-unsigned-ipa
           path: SamsungRemotePro-unsigned.ipa
           if-no-files-found: error
-          retention-days: 7
+          retention-days: 14
+
+      - name: Publish GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          name: Samsung Remote Pro ${{ github.ref_name }}
+          generate_release_notes: true
+          files: SamsungRemotePro-unsigned.ipa
+          fail_on_unmatched_files: true
