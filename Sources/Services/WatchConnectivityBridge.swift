@@ -25,4 +25,26 @@ final class WatchConnectivityBridge: NSObject, WCSessionDelegate {
         guard let command = message["command"] as? String else { return }
         DispatchQueue.main.async { [weak self] in self?.onCommand?(command) }
     }
+
+    /// The watch uses replyHandler to display whether the iPhone accepted a command.
+    /// This acknowledges receipt by the iPhone, not execution by the television.
+    func session(
+        _ session: WCSession,
+        didReceiveMessage message: [String: Any],
+        replyHandler: @escaping ([String: Any]) -> Void
+    ) {
+        guard let command = message["command"] as? String, !command.isEmpty else {
+            replyHandler(["ok": false, "error": "missing_command"])
+            return
+        }
+
+        DispatchQueue.main.async { [weak self] in
+            guard let self else {
+                replyHandler(["ok": false, "error": "receiver_unavailable"])
+                return
+            }
+            self.onCommand?(command)
+            replyHandler(["ok": true])
+        }
+    }
 }

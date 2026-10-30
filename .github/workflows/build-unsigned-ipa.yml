@@ -33,6 +33,10 @@ jobs:
           }
           plutil -lint Config/Info.plist Config/WidgetInfo.plist WatchApp/Info.plist
 
+      - name: Vérifier la syntaxe Swift et les invariants du projet
+        shell: bash
+        run: bash Scripts/validate-launcher-fix.sh
+
       - name: Vérifier le schéma partagé
         shell: bash
         run: |
